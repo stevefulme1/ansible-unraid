@@ -146,14 +146,14 @@ QUERY_CERT_INFO = """
 def main():
     argument_spec = unraid_argument_spec()
     argument_spec.update(
-        state=dict(type="str", choices=["query", "provisioneded"], default="query"),
+        state=dict(type="str", choices=["query", "provisioned"], default="query"),
         type=dict(type="str", choices=["self_signed", "lets_encrypt"]),
     )
 
     module = AnsibleModule(
         argument_spec=argument_spec,
         required_if=[
-            ("state", "provisioneded", ["type"]),
+            ("state", "provisioned", ["type"]),
         ],
         supports_check_mode=True,
     )
@@ -177,7 +177,7 @@ def main():
         result["msg"] = "Certificate queryrmation retrieved successfully."
         module.exit_json(**result)
 
-    # state == "provisioneded"
+    # state == "provisioned"
     if module.check_mode:
         result["changed"] = True
         result["msg"] = (
