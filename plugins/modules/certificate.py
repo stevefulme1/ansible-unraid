@@ -18,7 +18,7 @@ version_added: "1.0.0"
 description:
   - Query SSL certificate information or provision certificates on an
     Unraid server via the GraphQL API.
-  - When I(state=info), retrieves the current SSL certificate details
+  - When I(state=query), retrieves the current SSL certificate details
     including issuer, expiration, and type.
   - When I(state=provision), requests provisioning of a new certificate.
     Provisioning support depends on the Unraid API version and the
@@ -146,14 +146,14 @@ QUERY_CERT_INFO = """
 def main():
     argument_spec = unraid_argument_spec()
     argument_spec.update(
-        state=dict(type="str", choices=["info", "provision"], default="info"),
+        state=dict(type="str", choices=["query", "provisioned"], default="query"),
         type=dict(type="str", choices=["self_signed", "lets_encrypt"]),
     )
 
     module = AnsibleModule(
         argument_spec=argument_spec,
         required_if=[
-            ("state", "provision", ["type"]),
+            ("state", "provisioned", ["type"]),
         ],
         supports_check_mode=True,
     )
@@ -173,11 +173,11 @@ def main():
 
     result["certificate"] = ssl_info if ssl_info else {}
 
-    if state == "info":
+    if state == "query":
         result["msg"] = "Certificate information retrieved successfully."
         module.exit_json(**result)
 
-    # state == "provision"
+    # state == "provisioned"
     if module.check_mode:
         result["changed"] = True
         result["msg"] = (

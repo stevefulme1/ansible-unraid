@@ -134,7 +134,7 @@ def get_key_id(key_string):
 def main():
     argument_spec = unraid_argument_spec()
     argument_spec.update(
-        key=dict(type="str", required=True),
+        key=dict(type="str", required=True, no_log=True),
         state=dict(type="str", choices=["present", "absent"], default="present"),
         user=dict(type="str", default="root"),
     )
