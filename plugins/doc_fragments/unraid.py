@@ -15,32 +15,28 @@ options:
         description:
             - URL of the Unraid server (e.g. C(https://192.168.1.10) or C(https://tower.local)).
             - The C(/graphql) path is appended automatically.
+            - Can also be set via the E(UNRAID_API_URL) environment variable.
         type: str
         required: true
-        env:
-            - name: UNRAID_API_URL
     api_key:
         description:
             - API key for authenticating with the Unraid GraphQL API.
             - Create keys in Settings > Management Access > API Keys.
             - Requires Unraid 7.2 or later.
+            - Can also be set via the E(UNRAID_API_KEY) environment variable.
         type: str
         required: true
-        env:
-            - name: UNRAID_API_KEY
     validate_certs:
         description:
             - Whether to validate SSL/TLS certificates.
             - Set to C(false) when using self-signed certificates.
+            - Can also be set via the E(UNRAID_VALIDATE_CERTS) environment variable.
         type: bool
         default: true
-        env:
-            - name: UNRAID_VALIDATE_CERTS
     api_timeout:
         description:
             - Timeout in seconds for API requests.
+            - Can also be set via the E(UNRAID_API_TIMEOUT) environment variable.
         type: int
         default: 30
-        env:
-            - name: UNRAID_API_TIMEOUT
 """

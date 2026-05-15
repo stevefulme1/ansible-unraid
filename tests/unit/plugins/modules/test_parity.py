@@ -5,9 +5,6 @@ __metaclass__ = type
 import pytest
 from unittest.mock import MagicMock, patch
 
-from ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api import (
-    UnraidError,
-)
 
 
 class AnsibleExitJson(Exception):
