@@ -6,7 +6,6 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 
-
 class AnsibleExitJson(Exception):
     def __init__(self, kwargs):
         self.kwargs = kwargs
