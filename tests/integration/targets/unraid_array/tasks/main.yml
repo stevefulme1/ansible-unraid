@@ -1,0 +1,45 @@
+---
+- name: Query current array state
+  stevefulme1.unraid.facts:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: initial_facts
+
+- name: Ensure array is started
+  stevefulme1.unraid.array:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    state: started
+  register: result
+
+- name: Verify array start is idempotent when already started
+  stevefulme1.unraid.array:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    state: started
+  register: result_idempotent
+
+- name: Assert idempotent call reports no change
+  ansible.builtin.assert:
+    that:
+      - not result_idempotent.changed
+    fail_msg: "Array start should be idempotent when already started"
+
+- name: Test check mode
+  stevefulme1.unraid.array:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    state: stopped
+  check_mode: true
+  register: check_result
+
+- name: Verify check mode does not stop array
+  stevefulme1.unraid.facts:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: verify_facts

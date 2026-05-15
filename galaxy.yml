@@ -1,0 +1,33 @@
+---
+namespace: stevefulme1
+name: unraid
+version: 1.0.0
+readme: README.md
+authors:
+  - Steve Fulmer <sfulmer@redhat.com>
+description: >-
+  Ansible Collection for managing Unraid NAS servers.
+  Provides modules for array management, Docker containers, VMs,
+  user shares, notifications, UPS, and more via the built-in GraphQL API.
+  Requires Unraid 7.2 or later.
+license:
+  - GPL-3.0-or-later
+tags:
+  - unraid
+  - nas
+  - storage
+  - docker
+  - virtualization
+  - homelab
+  - graphql
+dependencies: {}
+repository: https://github.com/stevefulme1/ansible-unraid
+documentation: https://github.com/stevefulme1/ansible-unraid/blob/main/README.md
+homepage: https://github.com/stevefulme1/ansible-unraid
+issues: https://github.com/stevefulme1/ansible-unraid/issues
+build_ignore:
+  - .git
+  - .github
+  - tests
+  - noxfile.py
+  - '*.tar.gz'

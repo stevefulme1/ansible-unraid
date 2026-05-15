@@ -1,0 +1,27 @@
+---
+- name: Create a test notification
+  stevefulme1.unraid.notification:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    state: present
+    subject: "Ansible Integration Test"
+    description: "This notification was created by an integration test."
+    importance: info
+  register: create_result
+
+- name: Verify notification was created
+  ansible.builtin.assert:
+    that:
+      - create_result.changed
+
+- name: Query notifications
+  stevefulme1.unraid.notification_info:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: notifications
+
+- name: Show notification overview
+  ansible.builtin.debug:
+    var: notifications.overview

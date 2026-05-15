@@ -1,0 +1,18 @@
+---
+- name: Gather Unraid facts
+  stevefulme1.unraid.facts:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: result
+
+- name: Verify facts were gathered
+  ansible.builtin.assert:
+    that:
+      - result.ansible_facts.unraid is defined
+      - result.ansible_facts.unraid.system is defined or result.ansible_facts.unraid.array is defined
+    fail_msg: "Facts module did not return expected structure"
+
+- name: Display gathered facts
+  ansible.builtin.debug:
+    var: result.ansible_facts.unraid

@@ -1,0 +1,11 @@
+---
+- name: List Docker containers
+  stevefulme1.unraid.facts:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: facts
+
+- name: Show containers
+  ansible.builtin.debug:
+    var: facts.ansible_facts.unraid.docker

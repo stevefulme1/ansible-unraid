@@ -1,0 +1,6 @@
+---
+# Copy this file to integration_config.yml and fill in values
+# for running integration tests against a real Unraid server.
+unraid_api_url: "https://tower.local"
+unraid_api_key: "your-api-key"
+unraid_validate_certs: false
