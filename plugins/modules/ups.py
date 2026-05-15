@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Copyright 2026 Steve Fulmer
 # GNU General Public License v3.0+

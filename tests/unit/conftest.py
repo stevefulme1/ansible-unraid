@@ -32,8 +32,14 @@ def mock_module():
     }
     module.check_mode = False
 
-    module.exit_json = MagicMock(side_effect=lambda **kw: (_ for _ in ()).throw(AnsibleExitJson(kw)))
-    module.fail_json = MagicMock(side_effect=lambda **kw: (_ for _ in ()).throw(AnsibleFailJson(kw)))
+    def _exit_json(**kwargs):
+        raise AnsibleExitJson(kwargs)
+
+    def _fail_json(**kwargs):
+        raise AnsibleFailJson(kwargs)
+
+    module.exit_json = MagicMock(side_effect=_exit_json)
+    module.fail_json = MagicMock(side_effect=_fail_json)
 
     return module
 

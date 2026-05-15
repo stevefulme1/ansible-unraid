@@ -4,7 +4,7 @@ __metaclass__ = type
 
 import json
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import patch, MagicMock
 
 from ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api import (
     UnraidClient,
