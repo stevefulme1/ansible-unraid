@@ -16,11 +16,11 @@ module: certificate
 short_description: Manage SSL certificates on Unraid
 version_added: "1.0.0"
 description:
-  - Query SSL certificate queryrmation or provisioned certificates on an
+  - Query SSL certificate information or provisioned certificates on an
     Unraid server via the GraphQL API.
   - When I(state=query), retrieves the current SSL certificate details
     including issuer, expiration, and type.
-  - When I(state=provisioned), requests provisioneding of a new certificate.
+  - When I(state=provisioned), requests provisioning of a new certificate.
     Provisioning support depends on the Unraid API version and the
     certificate type requested.
   - Requires Unraid 7.2 or later.
@@ -29,8 +29,8 @@ options:
     description:
       - The operation to perform.
       - V(query) queries the current certificate details (read-only).
-      - V(provisioned) requests provisioneding of a new certificate. Note that
-        Let's Encrypt provisioneding requires proper DNS configuration and
+      - V(provisioned) requests provisioning of a new certificate. Note that
+        Let's Encrypt provisioning requires proper DNS configuration and
         Unraid Connect setup.
     type: str
     choices:
@@ -39,9 +39,9 @@ options:
     default: query
   type:
     description:
-      - The type of certificate to provisioned.
+      - The type of certificate to provision.
       - V(self_signed) generates a self-signed certificate.
-      - V(lets_encrypt) provisioneds a certificate from Let's Encrypt via
+      - V(lets_encrypt) provisions a certificate from Let's Encrypt via
         the Unraid Connect ACME integration.
       - Only used when I(state=provisioned).
     type: str
@@ -53,11 +53,11 @@ extends_documentation_fragment:
 author:
   - Steve Fulmer (@stevefulme1)
 notes:
-  - Let's Encrypt certificate provisioneding requires a valid domain name
+  - Let's Encrypt certificate provisioning requires a valid domain name
     configured in Unraid Connect and proper DNS resolution.
-  - Certificate provisioneding via the GraphQL API may not be available in
+  - Certificate provisioning via the GraphQL API may not be available in
     all Unraid versions. If the mutation is not supported, the module
-    provides guidance on manual provisioneding through the WebGUI.
+    provides guidance on manual provisioning through the WebGUI.
   - Self-signed certificates are generated locally and do not require
     external connectivity.
   - Certificate files on Unraid are stored at
@@ -65,7 +65,7 @@ notes:
 """
 
 EXAMPLES = r"""
-- name: Get current certificate query
+- name: Get current certificate information
   stevefulme1.unraid.certificate:
     api_url: https://unraid.local
     api_key: "{{ unraid_api_key }}"
@@ -164,38 +164,38 @@ def main():
     client = get_client(module)
     result = dict(changed=False)
 
-    # Query current certificate query
+    # Query current certificate information
     try:
         data = client.query(QUERY_CERT_INFO)
         ssl_query = data.get("query", {}).get("ssl", {})
     except UnraidError as exc:
-        module.fail_json(msg="Failed to query certificate query: %s" % str(exc))
+        module.fail_json(msg="Failed to query certificate information: %s" % str(exc))
 
     result["certificate"] = ssl_query if ssl_query else {}
 
     if state == "query":
-        result["msg"] = "Certificate queryrmation retrieved successfully."
+        result["msg"] = "Certificate information retrieved successfully."
         module.exit_json(**result)
 
     # state == "provisioned"
     if module.check_mode:
         result["changed"] = True
         result["msg"] = (
-            "Would provisioned a %s certificate." % cert_type
+            "Would provision a %s certificate." % cert_type
         )
         module.exit_json(**result)
 
-    # Attempt provisioneding via GraphQL mutation
+    # Attempt provisioning via GraphQL mutation
     if cert_type == "self_signed":
         mutation = """
         mutation {
-            provisionedSelfSignedCert
+            provisionSelfSignedCert
         }
         """
     else:
         mutation = """
         mutation {
-            provisionedLetsEncryptCert
+            provisionLetsEncryptCert
         }
         """
 
@@ -203,14 +203,14 @@ def main():
         client.mutate(mutation)
         result["changed"] = True
         result["msg"] = (
-            "Certificate provisioneding (%s) requested successfully." % cert_type
+            "Certificate provisioning (%s) requested successfully." % cert_type
         )
     except UnraidError as exc:
         error_msg = str(exc)
         if "not" in error_msg.lower() and ("found" in error_msg.lower() or "support" in error_msg.lower()):
             result["msg"] = (
-                "Certificate provisioneding mutation is not available in this "
-                "Unraid API version. To provisioned a %s certificate, use the "
+                "Certificate provisioning mutation is not available in this "
+                "Unraid API version. To provision a %s certificate, use the "
                 "Unraid WebGUI at Settings > Management Access > SSL, or "
                 "manage certificates directly at "
                 "/boot/config/ssl/certs/certificate_bundle.pem via SSH."
@@ -218,10 +218,10 @@ def main():
             )
             module.exit_json(**result)
         module.fail_json(
-            msg="Failed to provisioned certificate: %s" % error_msg
+            msg="Failed to provision certificate: %s" % error_msg
         )
 
-    # Re-query certificate query
+    # Re-query certificate information
     try:
         data = client.query(QUERY_CERT_INFO)
         ssl_query = data.get("query", {}).get("ssl", {})
