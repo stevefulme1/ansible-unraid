@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_array_setup
+# Configure array with parity and data drives
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_array_setup_host is defined
+    fail_msg: "unraid_array_setup_host must be defined"
+    quiet: true
+
+- name: Execute unraid array setup
+  ansible.builtin.debug:
+    msg: >-
+      Configure array with parity and data drives.
+      Target: {{ unraid_array_setup_host }}

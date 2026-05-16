@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_monitoring
+
+# Target host
+unraid_monitoring_host: ""
+
+# Authentication
+unraid_monitoring_username: ""
+unraid_monitoring_password: ""
+unraid_monitoring_api_key: ""
+
+# Behavior
+unraid_monitoring_validate_certs: true
+unraid_monitoring_state: present

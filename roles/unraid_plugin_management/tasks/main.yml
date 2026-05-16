@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_plugin_management
+# Install and configure plugins
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_plugin_management_host is defined
+    fail_msg: "unraid_plugin_management_host must be defined"
+    quiet: true
+
+- name: Execute unraid plugin management
+  ansible.builtin.debug:
+    msg: >-
+      Install and configure plugins.
+      Target: {{ unraid_plugin_management_host }}

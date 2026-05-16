@@ -1,0 +1,27 @@
+---
+argument_specs:
+  main:
+    short_description: "Apply security best practices"
+    options:
+      unraid_security_hardening_host:
+        description: Target host address
+        type: str
+        required: true
+      unraid_security_hardening_username:
+        description: Authentication username
+        type: str
+      unraid_security_hardening_password:
+        description: Authentication password
+        type: str
+      unraid_security_hardening_api_key:
+        description: API key for authentication
+        type: str
+      unraid_security_hardening_validate_certs:
+        description: Validate SSL certificates
+        type: bool
+        default: true
+      unraid_security_hardening_state:
+        description: Desired state
+        type: str
+        default: present
+        choices: [present, absent]

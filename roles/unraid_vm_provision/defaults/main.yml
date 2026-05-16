@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_vm_provision
+
+# Target host
+unraid_vm_provision_host: ""
+
+# Authentication
+unraid_vm_provision_username: ""
+unraid_vm_provision_password: ""
+unraid_vm_provision_api_key: ""
+
+# Behavior
+unraid_vm_provision_validate_certs: true
+unraid_vm_provision_state: present

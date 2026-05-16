@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_security_hardening
+
+# Target host
+unraid_security_hardening_host: ""
+
+# Authentication
+unraid_security_hardening_username: ""
+unraid_security_hardening_password: ""
+unraid_security_hardening_api_key: ""
+
+# Behavior
+unraid_security_hardening_validate_certs: true
+unraid_security_hardening_state: present

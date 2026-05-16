@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_network_setup
+
+# Target host
+unraid_network_setup_host: ""
+
+# Authentication
+unraid_network_setup_username: ""
+unraid_network_setup_password: ""
+unraid_network_setup_api_key: ""
+
+# Behavior
+unraid_network_setup_validate_certs: true
+unraid_network_setup_state: present

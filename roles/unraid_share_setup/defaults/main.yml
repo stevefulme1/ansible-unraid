@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_share_setup
+
+# Target host
+unraid_share_setup_host: ""
+
+# Authentication
+unraid_share_setup_username: ""
+unraid_share_setup_password: ""
+unraid_share_setup_api_key: ""
+
+# Behavior
+unraid_share_setup_validate_certs: true
+unraid_share_setup_state: present

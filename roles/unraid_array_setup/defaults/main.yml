@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_array_setup
+
+# Target host
+unraid_array_setup_host: ""
+
+# Authentication
+unraid_array_setup_username: ""
+unraid_array_setup_password: ""
+unraid_array_setup_api_key: ""
+
+# Behavior
+unraid_array_setup_validate_certs: true
+unraid_array_setup_state: present

@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_security_hardening
+# Apply security best practices
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_security_hardening_host is defined
+    fail_msg: "unraid_security_hardening_host must be defined"
+    quiet: true
+
+- name: Execute unraid security hardening
+  ansible.builtin.debug:
+    msg: >-
+      Apply security best practices.
+      Target: {{ unraid_security_hardening_host }}

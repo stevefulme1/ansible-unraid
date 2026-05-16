@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_docker_setup
+# Deploy Docker containers
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_docker_setup_host is defined
+    fail_msg: "unraid_docker_setup_host must be defined"
+    quiet: true
+
+- name: Execute unraid docker setup
+  ansible.builtin.debug:
+    msg: >-
+      Deploy Docker containers.
+      Target: {{ unraid_docker_setup_host }}

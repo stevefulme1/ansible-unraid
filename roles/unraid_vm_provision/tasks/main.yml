@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_vm_provision
+# Create and configure VMs
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_vm_provision_host is defined
+    fail_msg: "unraid_vm_provision_host must be defined"
+    quiet: true
+
+- name: Execute unraid vm provision
+  ansible.builtin.debug:
+    msg: >-
+      Create and configure VMs.
+      Target: {{ unraid_vm_provision_host }}

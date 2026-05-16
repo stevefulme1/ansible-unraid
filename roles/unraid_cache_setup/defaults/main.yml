@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_cache_setup
+
+# Target host
+unraid_cache_setup_host: ""
+
+# Authentication
+unraid_cache_setup_username: ""
+unraid_cache_setup_password: ""
+unraid_cache_setup_api_key: ""
+
+# Behavior
+unraid_cache_setup_validate_certs: true
+unraid_cache_setup_state: present

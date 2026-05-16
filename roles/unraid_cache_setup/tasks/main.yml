@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_cache_setup
+# Configure cache pools and mover settings
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_cache_setup_host is defined
+    fail_msg: "unraid_cache_setup_host must be defined"
+    quiet: true
+
+- name: Execute unraid cache setup
+  ansible.builtin.debug:
+    msg: >-
+      Configure cache pools and mover settings.
+      Target: {{ unraid_cache_setup_host }}

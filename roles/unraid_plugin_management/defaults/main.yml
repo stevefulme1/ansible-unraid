@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_plugin_management
+
+# Target host
+unraid_plugin_management_host: ""
+
+# Authentication
+unraid_plugin_management_username: ""
+unraid_plugin_management_password: ""
+unraid_plugin_management_api_key: ""
+
+# Behavior
+unraid_plugin_management_validate_certs: true
+unraid_plugin_management_state: present

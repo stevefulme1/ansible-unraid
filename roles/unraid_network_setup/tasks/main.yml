@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_network_setup
+# Configure network bonds and VLANs
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_network_setup_host is defined
+    fail_msg: "unraid_network_setup_host must be defined"
+    quiet: true
+
+- name: Execute unraid network setup
+  ansible.builtin.debug:
+    msg: >-
+      Configure network bonds and VLANs.
+      Target: {{ unraid_network_setup_host }}

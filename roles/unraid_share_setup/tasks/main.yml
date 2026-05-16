@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_share_setup
+# Create and configure user shares
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_share_setup_host is defined
+    fail_msg: "unraid_share_setup_host must be defined"
+    quiet: true
+
+- name: Execute unraid share setup
+  ansible.builtin.debug:
+    msg: >-
+      Create and configure user shares.
+      Target: {{ unraid_share_setup_host }}

@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for unraid_monitoring
+# Set up notifications and alerts
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - unraid_monitoring_host is defined
+    fail_msg: "unraid_monitoring_host must be defined"
+    quiet: true
+
+- name: Execute unraid monitoring
+  ansible.builtin.debug:
+    msg: >-
+      Set up notifications and alerts.
+      Target: {{ unraid_monitoring_host }}

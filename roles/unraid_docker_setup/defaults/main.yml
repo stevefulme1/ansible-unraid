@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for unraid_docker_setup
+
+# Target host
+unraid_docker_setup_host: ""
+
+# Authentication
+unraid_docker_setup_username: ""
+unraid_docker_setup_password: ""
+unraid_docker_setup_api_key: ""
+
+# Behavior
+unraid_docker_setup_validate_certs: true
+unraid_docker_setup_state: present
