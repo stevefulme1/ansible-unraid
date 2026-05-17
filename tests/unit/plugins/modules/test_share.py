@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,8 +18,8 @@ def mock_api_client():
     """Mock API client for share."""
     client = MagicMock()
     client.get.return_value = None
-    client.create.return_value = {"share_name": "res-123", "share_name": "test-share"}
-    client.update.return_value = {"share_name": "res-123", "share_name": "test-share-updated"}
+    client.create.return_value = {"share_name": "res-123", "new_share_name": "test-share"}
+    client.update.return_value = {"new_share_name": "res-123", "share_name": "test-share-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -30,7 +30,7 @@ def existing_resource():
     """Return a dict representing an existing share."""
     return {
         "share_name": "res-123",
-        "share_name": "test-share",
+        "new_share_name": "test-share",
         "state": "active",
     }
 
@@ -165,8 +165,8 @@ class TestListShare:
     def test_list_returns_all(self, mock_api_client):
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
-            {"share_name": "1", "share_name": "first"},
-            {"share_name": "2", "share_name": "second"},
+            {"share_name": "1", "new_share_name": "first"},
+            {"new_share_name": "2", "share_name": "second"},
         ]
         result = mock_api_client.list("share")
         assert len(result) == 2
@@ -178,8 +178,8 @@ class TestListShare:
 
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
-        mock_api_client.list.return_value = [{"share_name": "1", "share_name": "match"}]
-        result = mock_api_client.list("share", filters={"share_name": "match"})
+        mock_api_client.list.return_value = [{"share_name": "1", "new_share_name": "match"}]
+        result = mock_api_client.list("share", filters={"new_share_name": "match"})
         assert len(result) == 1
 
 

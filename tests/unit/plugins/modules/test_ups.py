@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,8 +18,8 @@ def mock_api_client():
     """Mock API client for ups."""
     client = MagicMock()
     client.get.return_value = None
-    client.create.return_value = {"ups_mode": "res-123", "ups_mode": "test-ups"}
-    client.update.return_value = {"ups_mode": "res-123", "ups_mode": "test-ups-updated"}
+    client.create.return_value = {"ups_mode": "res-123", "new_ups_mode": "test-ups"}
+    client.update.return_value = {"new_ups_mode": "res-123", "ups_mode": "test-ups-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -30,7 +30,7 @@ def existing_resource():
     """Return a dict representing an existing ups."""
     return {
         "ups_mode": "res-123",
-        "ups_mode": "test-ups",
+        "new_ups_mode": "test-ups",
         "state": "active",
     }
 
@@ -165,8 +165,8 @@ class TestListUps:
     def test_list_returns_all(self, mock_api_client):
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
-            {"ups_mode": "1", "ups_mode": "first"},
-            {"ups_mode": "2", "ups_mode": "second"},
+            {"ups_mode": "1", "new_ups_mode": "first"},
+            {"new_ups_mode": "2", "ups_mode": "second"},
         ]
         result = mock_api_client.list("ups")
         assert len(result) == 2
@@ -178,8 +178,8 @@ class TestListUps:
 
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
-        mock_api_client.list.return_value = [{"ups_mode": "1", "ups_mode": "match"}]
-        result = mock_api_client.list("ups", filters={"ups_mode": "match"})
+        mock_api_client.list.return_value = [{"ups_mode": "1", "new_ups_mode": "match"}]
+        result = mock_api_client.list("ups", filters={"new_ups_mode": "match"})
         assert len(result) == 1
 
 

@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,8 +18,8 @@ def mock_api_client():
     """Mock API client for array."""
     client = MagicMock()
     client.get.return_value = None
-    client.create.return_value = {"array_state": "res-123", "array_state": "test-array"}
-    client.update.return_value = {"array_state": "res-123", "array_state": "test-array-updated"}
+    client.create.return_value = {"array_state": "res-123", "new_array_state": "test-array"}
+    client.update.return_value = {"new_array_state": "res-123", "array_state": "test-array-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -30,7 +30,7 @@ def existing_resource():
     """Return a dict representing an existing array."""
     return {
         "array_state": "res-123",
-        "array_state": "test-array",
+        "new_array_state": "test-array",
         "state": "active",
     }
 
@@ -165,8 +165,8 @@ class TestListArray:
     def test_list_returns_all(self, mock_api_client):
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
-            {"array_state": "1", "array_state": "first"},
-            {"array_state": "2", "array_state": "second"},
+            {"array_state": "1", "new_array_state": "first"},
+            {"new_array_state": "2", "array_state": "second"},
         ]
         result = mock_api_client.list("array")
         assert len(result) == 2
@@ -178,8 +178,8 @@ class TestListArray:
 
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
-        mock_api_client.list.return_value = [{"array_state": "1", "array_state": "match"}]
-        result = mock_api_client.list("array", filters={"array_state": "match"})
+        mock_api_client.list.return_value = [{"array_state": "1", "new_array_state": "match"}]
+        result = mock_api_client.list("array", filters={"new_array_state": "match"})
         assert len(result) == 1
 
 

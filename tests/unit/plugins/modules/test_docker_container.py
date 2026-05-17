@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -19,7 +19,7 @@ def mock_api_client():
     client = MagicMock()
     client.get.return_value = None
     client.create.return_value = {"container_id": "res-123", "name": "test-docker_container"}
-    client.update.return_value = {"container_id": "res-123", "name": "test-docker_container-updated"}
+    client.update.return_value = {"container_id": "res-123", "new_name": "test-docker_container-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -166,7 +166,7 @@ class TestListDockerContainer:
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
             {"container_id": "1", "name": "first"},
-            {"container_id": "2", "name": "second"},
+            {"container_id": "2", "new_name": "second"},
         ]
         result = mock_api_client.list("docker_container")
         assert len(result) == 2
@@ -179,7 +179,7 @@ class TestListDockerContainer:
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
         mock_api_client.list.return_value = [{"container_id": "1", "name": "match"}]
-        result = mock_api_client.list("docker_container", filters={"name": "match"})
+        result = mock_api_client.list("docker_container", filters={"new_name": "match"})
         assert len(result) == 1
 
 

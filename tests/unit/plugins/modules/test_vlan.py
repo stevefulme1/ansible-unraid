@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -19,7 +19,7 @@ def mock_api_client():
     client = MagicMock()
     client.get.return_value = None
     client.create.return_value = {"vlan_id": "res-123", "name": "test-vlan"}
-    client.update.return_value = {"vlan_id": "res-123", "name": "test-vlan-updated"}
+    client.update.return_value = {"vlan_id": "res-123", "new_name": "test-vlan-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -166,7 +166,7 @@ class TestListVlan:
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
             {"vlan_id": "1", "name": "first"},
-            {"vlan_id": "2", "name": "second"},
+            {"vlan_id": "2", "new_name": "second"},
         ]
         result = mock_api_client.list("vlan")
         assert len(result) == 2
@@ -179,7 +179,7 @@ class TestListVlan:
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
         mock_api_client.list.return_value = [{"vlan_id": "1", "name": "match"}]
-        result = mock_api_client.list("vlan", filters={"name": "match"})
+        result = mock_api_client.list("vlan", filters={"new_name": "match"})
         assert len(result) == 1
 
 

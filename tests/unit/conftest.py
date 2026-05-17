@@ -2,7 +2,7 @@
 
 import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -39,7 +39,7 @@ def mock_client():
     client = MagicMock()
     client.get.return_value = None
     client.create.return_value = {"id": "test-123", "name": "test-resource"}
-    client.update.return_value = {"id": "test-123", "name": "test-resource-updated"}
+    client.update.return_value = {"new_id": "test-123", "name": "test-resource-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client

@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,8 +18,8 @@ def mock_api_client():
     """Mock API client for user."""
     client = MagicMock()
     client.get.return_value = None
-    client.create.return_value = {"username": "res-123", "username": "test-user"}
-    client.update.return_value = {"username": "res-123", "username": "test-user-updated"}
+    client.create.return_value = {"username": "res-123", "new_username": "test-user"}
+    client.update.return_value = {"new_username": "res-123", "username": "test-user-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -30,7 +30,7 @@ def existing_resource():
     """Return a dict representing an existing user."""
     return {
         "username": "res-123",
-        "username": "test-user",
+        "new_username": "test-user",
         "state": "active",
     }
 
@@ -165,8 +165,8 @@ class TestListUser:
     def test_list_returns_all(self, mock_api_client):
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
-            {"username": "1", "username": "first"},
-            {"username": "2", "username": "second"},
+            {"username": "1", "new_username": "first"},
+            {"new_username": "2", "username": "second"},
         ]
         result = mock_api_client.list("user")
         assert len(result) == 2
@@ -178,8 +178,8 @@ class TestListUser:
 
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
-        mock_api_client.list.return_value = [{"username": "1", "username": "match"}]
-        result = mock_api_client.list("user", filters={"username": "match"})
+        mock_api_client.list.return_value = [{"username": "1", "new_username": "match"}]
+        result = mock_api_client.list("user", filters={"new_username": "match"})
         assert len(result) == 1
 
 

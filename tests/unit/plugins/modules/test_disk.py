@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,8 +18,8 @@ def mock_api_client():
     """Mock API client for disk."""
     client = MagicMock()
     client.get.return_value = None
-    client.create.return_value = {"disk_name": "res-123", "disk_name": "test-disk"}
-    client.update.return_value = {"disk_name": "res-123", "disk_name": "test-disk-updated"}
+    client.create.return_value = {"disk_name": "res-123", "new_disk_name": "test-disk"}
+    client.update.return_value = {"new_disk_name": "res-123", "disk_name": "test-disk-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -30,7 +30,7 @@ def existing_resource():
     """Return a dict representing an existing disk."""
     return {
         "disk_name": "res-123",
-        "disk_name": "test-disk",
+        "new_disk_name": "test-disk",
         "state": "active",
     }
 
@@ -165,8 +165,8 @@ class TestListDisk:
     def test_list_returns_all(self, mock_api_client):
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
-            {"disk_name": "1", "disk_name": "first"},
-            {"disk_name": "2", "disk_name": "second"},
+            {"disk_name": "1", "new_disk_name": "first"},
+            {"new_disk_name": "2", "disk_name": "second"},
         ]
         result = mock_api_client.list("disk")
         assert len(result) == 2
@@ -178,8 +178,8 @@ class TestListDisk:
 
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
-        mock_api_client.list.return_value = [{"disk_name": "1", "disk_name": "match"}]
-        result = mock_api_client.list("disk", filters={"disk_name": "match"})
+        mock_api_client.list.return_value = [{"disk_name": "1", "new_disk_name": "match"}]
+        result = mock_api_client.list("disk", filters={"new_disk_name": "match"})
         assert len(result) == 1
 
 

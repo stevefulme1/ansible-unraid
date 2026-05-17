@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -19,7 +19,7 @@ def mock_api_client():
     client = MagicMock()
     client.get.return_value = None
     client.create.return_value = {"notification_id": "res-123", "subject": "test-notification"}
-    client.update.return_value = {"notification_id": "res-123", "subject": "test-notification-updated"}
+    client.update.return_value = {"notification_id": "res-123", "new_subject": "test-notification-updated"}
     client.delete.return_value = None
     client.list.return_value = []
     return client
@@ -166,7 +166,7 @@ class TestListNotification:
         """Verify list returns all resources."""
         mock_api_client.list.return_value = [
             {"notification_id": "1", "subject": "first"},
-            {"notification_id": "2", "subject": "second"},
+            {"notification_id": "2", "new_subject": "second"},
         ]
         result = mock_api_client.list("notification")
         assert len(result) == 2
@@ -179,7 +179,7 @@ class TestListNotification:
     def test_list_with_filter(self, mock_api_client):
         """Verify list applies filters."""
         mock_api_client.list.return_value = [{"notification_id": "1", "subject": "match"}]
-        result = mock_api_client.list("notification", filters={"subject": "match"})
+        result = mock_api_client.list("notification", filters={"new_subject": "match"})
         assert len(result) == 1
 
 
