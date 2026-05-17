@@ -33,6 +33,16 @@ notes:
     the M(stevefulme1.unraid.connect_config) module.
   - Unraid Connect requires an active Unraid.net account and the server
     to be signed in at C(Settings > Management Access > Unraid Connect).
+  limit:
+    description:
+      - Maximum number of results to return.
+    type: int
+    default: 100
+  offset:
+    description:
+      - Number of results to skip for pagination.
+    type: int
+    default: 0
 """
 
 EXAMPLES = r"""
@@ -103,6 +113,10 @@ QUERY_CONNECT = """
 
 def main():
     argument_spec = unraid_argument_spec()
+    argument_spec.update(
+        limit=dict(type='int', default=100),
+        offset=dict(type='int', default=0),
+    )
 
     module = AnsibleModule(
         argument_spec=argument_spec,

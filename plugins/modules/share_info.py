@@ -41,6 +41,16 @@ notes:
     version.
   - For managing share state (present/absent checks), use the
     M(stevefulme1.unraid.share) module instead.
+  limit:
+    description:
+      - Maximum number of results to return.
+    type: int
+    default: 100
+  offset:
+    description:
+      - Number of results to skip for pagination.
+    type: int
+    default: 0
 """
 
 EXAMPLES = r"""
@@ -188,6 +198,10 @@ def main():
     argument_spec = unraid_argument_spec()
     argument_spec.update(
         name=dict(type="str"),
+    )
+    argument_spec.update(
+        limit=dict(type='int', default=100),
+        offset=dict(type='int', default=0),
     )
 
     module = AnsibleModule(
