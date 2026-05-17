@@ -22,6 +22,16 @@ author:
     - Steve Fulmer (@stevefulme1)
 extends_documentation_fragment:
     - stevefulme1.unraid.unraid
+  limit:
+    description:
+      - Maximum number of results to return.
+    type: int
+    default: 100
+  offset:
+    description:
+      - Number of results to skip for pagination.
+    type: int
+    default: 0
 """
 
 EXAMPLES = r"""
@@ -87,6 +97,10 @@ QUERY_DISK_TEMPS = """
 
 def run_module():
     argument_spec = unraid_argument_spec()
+    argument_spec.update(
+        limit=dict(type='int', default=100),
+        offset=dict(type='int', default=0),
+    )
 
     module = AnsibleModule(
         argument_spec=argument_spec,

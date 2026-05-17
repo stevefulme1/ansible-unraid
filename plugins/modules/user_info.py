@@ -30,6 +30,16 @@ notes:
     user attributes (groups, permissions) are not currently available via
     the API.
   - To manage users, see the M(stevefulme1.unraid.user) module.
+  limit:
+    description:
+      - Maximum number of results to return.
+    type: int
+    default: 100
+  offset:
+    description:
+      - Number of results to skip for pagination.
+    type: int
+    default: 0
 """
 
 EXAMPLES = r"""
@@ -85,6 +95,10 @@ QUERY_USERS = "{ users }"
 
 def main():
     argument_spec = unraid_argument_spec()
+    argument_spec.update(
+        limit=dict(type='int', default=100),
+        offset=dict(type='int', default=0),
+    )
 
     module = AnsibleModule(
         argument_spec=argument_spec,

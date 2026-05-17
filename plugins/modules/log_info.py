@@ -25,6 +25,16 @@ options:
             - Path of a specific log file to read.
             - If omitted, returns the list of available log files.
         type: str
+  limit:
+    description:
+      - Maximum number of results to return.
+    type: int
+    default: 100
+  offset:
+    description:
+      - Number of results to skip for pagination.
+    type: int
+    default: 0
 """
 
 EXAMPLES = r"""
@@ -81,6 +91,10 @@ def main():
     argument_spec = unraid_argument_spec()
     argument_spec.update(
         path=dict(type="str"),
+    )
+    argument_spec.update(
+        limit=dict(type='int', default=100),
+        offset=dict(type='int', default=0),
     )
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
