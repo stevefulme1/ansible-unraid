@@ -1,0 +1,5 @@
+---
+profile: basic
+warn_list:
+  - var-naming[no-role-prefix]
+  - args[module]
