@@ -136,6 +136,8 @@ msg:
   type: str
 """
 
+import shlex
+
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api import (
     unraid_argument_spec,
@@ -159,6 +161,14 @@ VIRSH_COMMANDS = {
     "delete": "virsh snapshot-delete --domain {vm_name} --snapshotname {snapshot_name}",
     "revert": "virsh snapshot-revert --domain {vm_name} --snapshotname {snapshot_name}",
 }
+
+
+def _build_virsh_cmd(template, vm_name, snapshot_name=None):
+    """Build a virsh command with shell-escaped user-supplied values."""
+    parts = {"vm_name": shlex.quote(vm_name)}
+    if snapshot_name is not None:
+        parts["snapshot_name"] = shlex.quote(snapshot_name)
+    return template.format(**parts)
 
 
 def find_vm(vms, name):
@@ -216,7 +226,7 @@ def main():
     )
 
     # List existing snapshots
-    list_cmd = VIRSH_COMMANDS["list"].format(vm_name=vm_name)
+    list_cmd = _build_virsh_cmd(VIRSH_COMMANDS["list"], vm_name)
     rc, stdout, stderr = module.run_command(list_cmd, use_unsafe_shell=True)
     existing_snapshots = [
         s.strip() for s in stdout.strip().splitlines() if s.strip()
@@ -238,8 +248,8 @@ def main():
                     % (snapshot_name, vm_name)
                 )
             else:
-                cmd = VIRSH_COMMANDS["create"].format(
-                    vm_name=vm_name, snapshot_name=snapshot_name
+                cmd = _build_virsh_cmd(
+                    VIRSH_COMMANDS["create"], vm_name, snapshot_name
                 )
                 rc, stdout, stderr = module.run_command(cmd)
                 if rc != 0:
@@ -265,8 +275,8 @@ def main():
                     % (snapshot_name, vm_name)
                 )
             else:
-                cmd = VIRSH_COMMANDS["delete"].format(
-                    vm_name=vm_name, snapshot_name=snapshot_name
+                cmd = _build_virsh_cmd(
+                    VIRSH_COMMANDS["delete"], vm_name, snapshot_name
                 )
                 rc, stdout, stderr = module.run_command(cmd)
                 if rc != 0:
@@ -291,8 +301,8 @@ def main():
                 % (vm_name, snapshot_name)
             )
         else:
-            cmd = VIRSH_COMMANDS["revert"].format(
-                vm_name=vm_name, snapshot_name=snapshot_name
+            cmd = _build_virsh_cmd(
+                VIRSH_COMMANDS["revert"], vm_name, snapshot_name
             )
             rc, stdout, stderr = module.run_command(cmd)
             if rc != 0:
