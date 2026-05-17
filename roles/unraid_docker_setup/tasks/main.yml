@@ -1,16 +1,107 @@
 ---
 # tasks/main.yml for unraid_docker_setup
-# Deploy Docker containers
+# Deploy Docker containers with networking on Unraid
 
 - name: Validate required variables
   ansible.builtin.assert:
     that:
-      - unraid_docker_setup_host is defined
-    fail_msg: "unraid_docker_setup_host must be defined"
+      - unraid_docker_setup_host | length > 0
+      - unraid_docker_setup_api_key | length > 0
+    fail_msg: >-
+      unraid_docker_setup_host and unraid_docker_setup_api_key must be defined.
     quiet: true
 
-- name: Execute unraid docker setup
-  ansible.builtin.debug:
-    msg: >-
-      Deploy Docker containers.
-      Target: {{ unraid_docker_setup_host }}
+- name: Build authentication parameters
+  ansible.builtin.set_fact:
+    _unraid_auth:
+      host: "{{ unraid_docker_setup_host }}"
+      api_key: "{{ unraid_docker_setup_api_key }}"
+      validate_certs: "{{ unraid_docker_setup_validate_certs }}"
+  no_log: true
+
+- name: Deploy Docker infrastructure
+  block:
+    - name: Pull Docker images
+      stevefulme1.unraid.docker_image:
+        host: "{{ _unraid_auth.host }}"
+        api_key: "{{ _unraid_auth.api_key }}"
+        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      loop: "{{ unraid_docker_setup_images }}"
+      when: unraid_docker_setup_images | length > 0
+
+    - name: Create Docker networks
+      stevefulme1.unraid.docker_network:
+        host: "{{ _unraid_auth.host }}"
+        api_key: "{{ _unraid_auth.api_key }}"
+        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        name: "{{ item.name }}"
+        driver: "{{ item.driver | default('bridge') }}"
+        subnet: "{{ item.subnet | default(omit) }}"
+        gateway: "{{ item.gateway | default(omit) }}"
+        iprange: "{{ item.iprange | default(omit) }}"
+        state: present
+      loop: "{{ unraid_docker_setup_networks }}"
+      when: unraid_docker_setup_networks | length > 0
+
+    - name: Create Docker volumes
+      stevefulme1.unraid.docker_volume:
+        host: "{{ _unraid_auth.host }}"
+        api_key: "{{ _unraid_auth.api_key }}"
+        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        name: "{{ item.name }}"
+        driver: "{{ item.driver | default('local') }}"
+        state: present
+      loop: "{{ unraid_docker_setup_volumes }}"
+      when: unraid_docker_setup_volumes | length > 0
+
+    - name: Deploy Docker containers
+      stevefulme1.unraid.docker_container:
+        host: "{{ _unraid_auth.host }}"
+        api_key: "{{ _unraid_auth.api_key }}"
+        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        name: "{{ item.name }}"
+        image: "{{ item.image }}"
+        restart_policy: "{{ item.restart_policy | default('unless-stopped') }}"
+        network: "{{ item.network | default(omit) }}"
+        ip: "{{ item.ip | default(omit) }}"
+        ports: "{{ item.ports | default([]) }}"
+        volumes: "{{ item.volumes | default([]) }}"
+        env: "{{ item.env | default({}) }}"
+        labels: "{{ item.labels | default({}) }}"
+        capabilities: "{{ item.capabilities | default([]) }}"
+        privileged: "{{ item.privileged | default(false) }}"
+        state: "{{ item.state | default('started') }}"
+      loop: "{{ unraid_docker_setup_containers }}"
+      when: unraid_docker_setup_containers | length > 0
+
+    - name: Deploy Docker compose stacks
+      stevefulme1.unraid.docker_compose:
+        host: "{{ _unraid_auth.host }}"
+        api_key: "{{ _unraid_auth.api_key }}"
+        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        name: "{{ item.name }}"
+        content: "{{ item.content }}"
+        state: present
+      loop: "{{ unraid_docker_setup_compose_stacks }}"
+      when: unraid_docker_setup_compose_stacks | length > 0
+
+    - name: Configure container autostart
+      stevefulme1.unraid.docker_autostart:
+        host: "{{ _unraid_auth.host }}"
+        api_key: "{{ _unraid_auth.api_key }}"
+        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        container: "{{ item.container }}"
+        enabled: "{{ item.enabled | default(true) }}"
+        delay: "{{ item.delay | default(0) }}"
+        state: present
+      loop: "{{ unraid_docker_setup_autostart }}"
+      when: unraid_docker_setup_autostart | length > 0
+
+  rescue:
+    - name: Docker deployment failed
+      ansible.builtin.fail:
+        msg: >-
+          Unraid Docker deployment failed:
+          {{ ansible_failed_result.msg | default('unknown error') }}

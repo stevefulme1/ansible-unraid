@@ -1,14 +1,69 @@
 ---
 # defaults/main.yml for unraid_array_setup
 
-# Target host
+# Connection
 unraid_array_setup_host: ""
-
-# Authentication
-unraid_array_setup_username: ""
-unraid_array_setup_password: ""
 unraid_array_setup_api_key: ""
-
-# Behavior
 unraid_array_setup_validate_certs: true
-unraid_array_setup_state: present
+
+# Parity drives
+unraid_array_setup_parity_disks:
+  []
+  # - slot: 0
+  #   device: "sda"
+  # - slot: 1
+  #   device: "sdb"
+
+# Data drives
+unraid_array_setup_data_disks:
+  []
+  # - slot: 1
+  #   device: "sdc"
+  # - slot: 2
+  #   device: "sdd"
+
+# Cache pool(s)
+unraid_array_setup_cache_pools:
+  []
+  # - name: "cache"
+  #   devices: ["nvme0n1", "nvme1n1"]
+  #   filesystem: "btrfs"
+  #   raid_level: "raid1"
+
+# Array state
+unraid_array_setup_state: started
+
+# Parity check schedule
+unraid_array_setup_parity_schedule:
+  enabled: true
+  frequency: "monthly"
+  day_of_month: 1
+  hour: 2
+  write_corrections: true
+
+# Spin down settings
+unraid_array_setup_spin_down_delay: 30
+
+# Disk settings
+unraid_array_setup_default_filesystem: "xfs"
+
+# SMART monitoring
+unraid_array_setup_smart_tests:
+  []
+  # - type: "SHORT"
+  #   schedule:
+  #     hour: 3
+  #     dow: "0"
+  # - type: "LONG"
+  #   schedule:
+  #     hour: 3
+  #     dom: "1"
+
+# UPS configuration
+unraid_array_setup_ups:
+  enabled: false
+  # name: "apc"
+  # driver: "usbhid-ups"
+  # port: "auto"
+  # shutdown_mode: "batt"
+  # timeout: 300

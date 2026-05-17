@@ -1,14 +1,77 @@
 ---
 # defaults/main.yml for unraid_docker_setup
 
-# Target host
+# Connection
 unraid_docker_setup_host: ""
-
-# Authentication
-unraid_docker_setup_username: ""
-unraid_docker_setup_password: ""
 unraid_docker_setup_api_key: ""
-
-# Behavior
 unraid_docker_setup_validate_certs: true
-unraid_docker_setup_state: present
+
+# Docker networks
+unraid_docker_setup_networks:
+  []
+  # - name: "br-apps"
+  #   driver: "bridge"
+  #   subnet: "172.20.0.0/16"
+  #   gateway: "172.20.0.1"
+  #   iprange: "172.20.1.0/24"
+
+# Docker volumes
+unraid_docker_setup_volumes:
+  []
+  # - name: "appdata-vol"
+  #   driver: "local"
+
+# Docker containers
+unraid_docker_setup_containers:
+  []
+  # - name: "nginx-proxy"
+  #   image: "nginx:latest"
+  #   state: started
+  #   restart_policy: "unless-stopped"
+  #   network: "br-apps"
+  #   ip: "172.20.1.10"
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - "/mnt/user/appdata/nginx:/etc/nginx:rw"
+  #     - "/mnt/user/appdata/nginx/html:/usr/share/nginx/html:ro"
+  #   env:
+  #     TZ: "America/New_York"
+  #     PUID: "99"
+  #     PGID: "100"
+  #   labels:
+  #     managed_by: "ansible"
+  #   capabilities: []
+  #   privileged: false
+  #   autostart: true
+
+# Docker image management
+unraid_docker_setup_images:
+  []
+  # - name: "nginx:latest"
+  #   pull: true
+  # - name: "old-image:v1"
+  #   state: absent
+
+# Docker compose stacks (from templates)
+unraid_docker_setup_compose_stacks:
+  []
+  # - name: "monitoring"
+  #   content: |
+  #     version: "3"
+  #     services:
+  #       grafana:
+  #         image: grafana/grafana:latest
+  #         ports:
+  #           - "3000:3000"
+
+# Autostart configuration
+unraid_docker_setup_autostart:
+  []
+  # - container: "nginx-proxy"
+  #   enabled: true
+  #   delay: 0
+  # - container: "plex"
+  #   enabled: true
+  #   delay: 10
