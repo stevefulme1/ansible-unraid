@@ -25,20 +25,21 @@ options:
             - Name of a specific VM to retrieve.
             - When omitted, information for all VMs is returned.
         type: str
+
+    limit:
+        description:
+            - Maximum number of results to return.
+        type: int
+        default: 100
+    offset:
+        description:
+            - Number of results to skip for pagination.
+        type: int
+        default: 0
 extends_documentation_fragment:
     - stevefulme1.unraid.unraid
 author:
     - Steve Fulmer (@stevefulme1)
-  limit:
-    description:
-      - Maximum number of results to return.
-    type: int
-    default: 100
-  offset:
-    description:
-      - Number of results to skip for pagination.
-    type: int
-    default: 0
 """
 
 EXAMPLES = r"""

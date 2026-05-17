@@ -25,16 +25,16 @@ options:
             - Path of a specific log file to read.
             - If omitted, returns the list of available log files.
         type: str
-  limit:
-    description:
-      - Maximum number of results to return.
-    type: int
-    default: 100
-  offset:
-    description:
-      - Number of results to skip for pagination.
-    type: int
-    default: 0
+    limit:
+        description:
+          - Maximum number of results to return.
+        type: int
+        default: 100
+    offset:
+        description:
+          - Number of results to skip for pagination.
+        type: int
+        default: 0
 """
 
 EXAMPLES = r"""

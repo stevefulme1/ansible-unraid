@@ -20,20 +20,21 @@ description:
     - If the GraphQL API does not expose image listing, the module falls back
       to documenting usage of C(docker images --format json) via SSH.
     - Requires Unraid 7.2 or later.
+
+    limit:
+        description:
+            - Maximum number of results to return.
+        type: int
+        default: 100
+    offset:
+        description:
+            - Number of results to skip for pagination.
+        type: int
+        default: 0
 extends_documentation_fragment:
     - stevefulme1.unraid.unraid
 author:
     - Steve Fulmer (@stevefulme1)
-  limit:
-    description:
-      - Maximum number of results to return.
-    type: int
-    default: 100
-  offset:
-    description:
-      - Number of results to skip for pagination.
-    type: int
-    default: 0
 """
 
 EXAMPLES = r"""

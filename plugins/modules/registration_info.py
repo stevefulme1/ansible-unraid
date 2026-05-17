@@ -24,6 +24,17 @@ description:
   - Useful for compliance checks, inventory audits, and ensuring license
     validity across a fleet of Unraid servers.
   - Requires Unraid 7.2 or later.
+
+    limit:
+        description:
+            - Maximum number of results to return.
+        type: int
+        default: 100
+    offset:
+        description:
+            - Number of results to skip for pagination.
+        type: int
+        default: 0
 extends_documentation_fragment:
   - stevefulme1.unraid.unraid
 author:
@@ -32,16 +43,6 @@ notes:
   - Registration information is read-only. License management must be
     performed through the Unraid WebGUI or at C(https://unraid.net/account).
   - The C(expiration) field may be null for lifetime licenses.
-  limit:
-    description:
-      - Maximum number of results to return.
-    type: int
-    default: 100
-  offset:
-    description:
-      - Number of results to skip for pagination.
-    type: int
-    default: 0
 """
 
 EXAMPLES = r"""

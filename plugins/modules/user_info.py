@@ -21,6 +21,17 @@ description:
   - Returns a list of all configured user accounts with available details.
   - This is an info module and never changes state on the target.
   - Requires Unraid 7.2 or later.
+
+    limit:
+        description:
+            - Maximum number of results to return.
+        type: int
+        default: 100
+    offset:
+        description:
+            - Number of results to skip for pagination.
+        type: int
+        default: 0
 extends_documentation_fragment:
   - stevefulme1.unraid.unraid
 author:
@@ -30,16 +41,6 @@ notes:
     user attributes (groups, permissions) are not currently available via
     the API.
   - To manage users, see the M(stevefulme1.unraid.user) module.
-  limit:
-    description:
-      - Maximum number of results to return.
-    type: int
-    default: 100
-  offset:
-    description:
-      - Number of results to skip for pagination.
-    type: int
-    default: 0
 """
 
 EXAMPLES = r"""

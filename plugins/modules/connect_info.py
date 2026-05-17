@@ -24,6 +24,17 @@ description:
     configuration details.
   - This is an info module and never changes state on the target.
   - Requires Unraid 7.2 or later.
+
+    limit:
+        description:
+            - Maximum number of results to return.
+        type: int
+        default: 100
+    offset:
+        description:
+            - Number of results to skip for pagination.
+        type: int
+        default: 0
 extends_documentation_fragment:
   - stevefulme1.unraid.unraid
 author:
@@ -33,16 +44,6 @@ notes:
     the M(stevefulme1.unraid.connect_config) module.
   - Unraid Connect requires an active Unraid.net account and the server
     to be signed in at C(Settings > Management Access > Unraid Connect).
-  limit:
-    description:
-      - Maximum number of results to return.
-    type: int
-    default: 100
-  offset:
-    description:
-      - Number of results to skip for pagination.
-    type: int
-    default: 0
 """
 
 EXAMPLES = r"""
