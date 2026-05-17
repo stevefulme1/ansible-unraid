@@ -46,11 +46,22 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
         ) from exc
 
     api_url = args["api_url"].rstrip("/")
-    ws_url = api_url.replace("https://", "wss://").replace("http://", "ws://")
-    if not ws_url.endswith("/graphql"):
-        ws_url += "/graphql"
+    use_ssl = args.get("use_ssl", True)
     api_key = args["api_key"]
     validate_certs = args.get("validate_certs", True)
+
+    if use_ssl:
+        ws_url = api_url.replace("https://", "wss://").replace("http://", "wss://")
+    else:
+        ws_url = api_url.replace("https://", "ws://").replace("http://", "ws://")
+    if not ws_url.endswith("/graphql"):
+        ws_url += "/graphql"
+
+    if not validate_certs:
+        logger.warning(
+            "SSL certificate verification is disabled. "
+            "This is insecure and should only be used for testing."
+        )
     subscriptions = args.get("subscriptions", list(SUBSCRIPTION_QUERIES.keys()))
     interval = int(args.get("interval", 5))
 
