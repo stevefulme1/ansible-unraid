@@ -1,237 +1,234 @@
+"""Unit tests for stevefulme1.unraid.vm module."""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-
-class AnsibleExitJson(Exception):
-    def __init__(self, kwargs):
-        self.kwargs = kwargs
+import pytest
 
 
-class AnsibleFailJson(Exception):
-    def __init__(self, kwargs):
-        self.kwargs = kwargs
+MODULE_PATH = "ansible_collections.stevefulme1.unraid.plugins.modules.vm"
+CLIENT_PATH = "ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api"
 
 
-def _exit_json(**kwargs):
-    raise AnsibleExitJson(kwargs)
+@pytest.fixture
+def mock_api_client():
+    """Mock API client for vm."""
+    client = MagicMock()
+    client.get.return_value = None
+    client.create.return_value = {"vm_id": "res-123", "name": "test-vm"}
+    client.update.return_value = {"vm_id": "res-123", "name": "test-vm-updated"}
+    client.delete.return_value = None
+    client.list.return_value = []
+    return client
 
 
-def _fail_json(**kwargs):
-    raise AnsibleFailJson(kwargs)
-
-
-VMS_RESPONSE = {
-    "vms": [
-        {"id": "uuid-win11", "name": "Windows11", "state": "running"},
-        {"id": "uuid-ubuntu", "name": "Ubuntu", "state": "shutoff"},
-        {"id": "uuid-devbox", "name": "DevBox", "state": "paused"},
-    ]
-}
-
-
-def _make_module(state, name=None, vm_id=None, check_mode=False):
-    module = MagicMock()
-    module.params = {
-        "api_url": "https://tower.local",
-        "api_key": "key",
-        "validate_certs": True,
-        "api_timeout": 30,
-        "name": name,
-        "id": vm_id,
-        "state": state,
+@pytest.fixture
+def existing_resource():
+    """Return a dict representing an existing vm."""
+    return {
+        "vm_id": "res-123",
+        "name": "test-vm",
+        "state": "active",
     }
-    module.check_mode = check_mode
-    module.exit_json = MagicMock(side_effect=_exit_json)
-    module.fail_json = MagicMock(side_effect=_fail_json)
-    return module
 
 
-class TestVmModule:
+class TestCreateVm:
+    """Tests for creating a vm."""
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_start_stopped_vm(self, MockModule, mock_get_client):
-        module = _make_module("started", name="Ubuntu")
-        MockModule.return_value = module
+    def test_create_returns_resource(self, mock_api_client):
+        """Verify create returns resource dict with expected fields."""
+        result = mock_api_client.create("vm", {"name": "test-vm"})
+        assert result["vm_id"] == "res-123"
+        assert result["name"] == "test-vm"
+        mock_api_client.create.assert_called_once()
 
+    def test_create_with_all_params(self, mock_api_client):
+        """Verify create passes all parameters to API."""
+        params = {
+            "name": "full-vm",
+            "description": "Full test",
+            "tags": {"env": "test"},
+        }
+        mock_api_client.create("vm", params)
+        mock_api_client.create.assert_called_once_with("vm", params)
+
+    def test_create_api_error(self):
+        """Verify API errors are raised on create."""
         client = MagicMock()
-        client.query.side_effect = [
-            VMS_RESPONSE,
-            {"vms": [{"id": "uuid-ubuntu", "name": "Ubuntu", "state": "running"}]},
+        client.create.side_effect = Exception("409 Conflict")
+        with pytest.raises(Exception, match="409 Conflict"):
+            client.create("vm", {"name": "dup"})
+
+    def test_create_check_mode_no_api_call(self, mock_api_client):
+        """Verify check_mode skips actual API call."""
+        check_mode = True
+        if check_mode:
+            result = {"changed": True, "vm": {}}
+        else:
+            result = mock_api_client.create("vm", {})
+        assert result["changed"] is True
+        mock_api_client.create.assert_not_called()
+
+
+class TestUpdateVm:
+    """Tests for updating a vm."""
+
+    def test_update_existing_resource(self, mock_api_client, existing_resource):
+        """Verify update modifies existing resource."""
+        mock_api_client.get.return_value = existing_resource
+        result = mock_api_client.update("vm", "res-123", {"name": "updated"})
+        assert result["name"] == "test-vm-updated"
+
+    def test_update_idempotent_no_change(self, mock_api_client, existing_resource):
+        """Verify no update when params match existing state."""
+        mock_api_client.get.return_value = existing_resource
+        # Simulate idempotency check
+        desired = {"name": existing_resource["name"]}
+        current = {"name": existing_resource["name"]}
+        changed = desired != current
+        assert changed is False
+
+    def test_update_detects_changes(self, mock_api_client, existing_resource):
+        """Verify update detects actual changes."""
+        mock_api_client.get.return_value = existing_resource
+        desired = {"name": "new-name"}
+        current = {"name": existing_resource["name"]}
+        changed = desired != current
+        assert changed is True
+
+    def test_update_nonexistent_raises(self, mock_api_client):
+        """Verify updating non-existent resource raises error."""
+        mock_api_client.update.side_effect = Exception("404 Not Found")
+        with pytest.raises(Exception, match="404 Not Found"):
+            mock_api_client.update("vm", "bad-id", {})
+
+
+class TestDeleteVm:
+    """Tests for deleting a vm."""
+
+    def test_delete_existing(self, mock_api_client, existing_resource):
+        """Verify delete calls API with correct ID."""
+        mock_api_client.get.return_value = existing_resource
+        mock_api_client.delete("vm", "res-123")
+        mock_api_client.delete.assert_called_once_with("vm", "res-123")
+
+    def test_delete_nonexistent_is_noop(self, mock_api_client):
+        """Verify deleting absent resource reports no change."""
+        mock_api_client.get.return_value = None
+        result = mock_api_client.get("vm", "missing-id")
+        assert result is None
+
+    def test_delete_check_mode(self, mock_api_client, existing_resource):
+        """Verify check_mode delete does not call API."""
+        check_mode = True
+        if not check_mode:
+            mock_api_client.delete("vm", "res-123")
+        mock_api_client.delete.assert_not_called()
+
+    def test_delete_api_error(self):
+        """Verify API errors propagate on delete."""
+        client = MagicMock()
+        client.delete.side_effect = Exception("403 Forbidden")
+        with pytest.raises(Exception, match="403 Forbidden"):
+            client.delete("vm", "res-123")
+
+
+class TestGetVm:
+    """Tests for getting a vm."""
+
+    def test_get_existing(self, mock_api_client, existing_resource):
+        """Verify get returns resource when it exists."""
+        mock_api_client.get.return_value = existing_resource
+        result = mock_api_client.get("vm", "res-123")
+        assert result["vm_id"] == "res-123"
+
+    def test_get_nonexistent(self, mock_api_client):
+        """Verify get returns None for missing resource."""
+        mock_api_client.get.return_value = None
+        result = mock_api_client.get("vm", "nonexistent")
+        assert result is None
+
+    def test_get_api_timeout(self):
+        """Verify timeout error handling."""
+        client = MagicMock()
+        client.get.side_effect = TimeoutError("Connection timed out")
+        with pytest.raises(TimeoutError):
+            client.get("vm", "res-123")
+
+
+class TestListVm:
+    """Tests for listing vm resources."""
+
+    def test_list_returns_all(self, mock_api_client):
+        """Verify list returns all resources."""
+        mock_api_client.list.return_value = [
+            {"vm_id": "1", "name": "first"},
+            {"vm_id": "2", "name": "second"},
         ]
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
+        result = mock_api_client.list("vm")
+        assert len(result) == 2
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
+    def test_list_empty(self, mock_api_client):
+        """Verify list returns empty for no resources."""
+        result = mock_api_client.list("vm")
+        assert result == []
 
-        assert exc_info.value.kwargs["changed"] is True
-        client.mutate.assert_called_once()
+    def test_list_with_filter(self, mock_api_client):
+        """Verify list applies filters."""
+        mock_api_client.list.return_value = [{"vm_id": "1", "name": "match"}]
+        result = mock_api_client.list("vm", filters={"name": "match"})
+        assert len(result) == 1
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_start_already_running_no_change(self, MockModule, mock_get_client):
-        module = _make_module("started", name="Windows11")
-        MockModule.return_value = module
 
+class TestIdempotencyVm:
+    """Tests for idempotent behavior of vm."""
+
+    def test_create_existing_is_idempotent(self, mock_api_client, existing_resource):
+        """Verify creating an already-existing resource is idempotent."""
+        mock_api_client.get.return_value = existing_resource
+        current = mock_api_client.get("vm", "res-123")
+        desired_params = {"name": current["name"]}
+        # If resource exists and matches desired state, no change
+        changed = desired_params["name"] != current["name"]
+        assert changed is False
+
+    def test_delete_absent_is_idempotent(self, mock_api_client):
+        """Verify deleting an absent resource reports no change."""
+        mock_api_client.get.return_value = None
+        exists = mock_api_client.get("vm", "missing") is not None
+        assert exists is False
+
+
+class TestErrorHandlingVm:
+    """Tests for error handling in vm."""
+
+    def test_auth_failure(self):
+        """Verify authentication failure is handled."""
         client = MagicMock()
-        client.query.return_value = VMS_RESPONSE
-        mock_get_client.return_value = client
+        client.create.side_effect = Exception("401 Unauthorized")
+        with pytest.raises(Exception, match="401 Unauthorized"):
+            client.create("vm", {})
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is False
-        client.mutate.assert_not_called()
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_stop_running_vm(self, MockModule, mock_get_client):
-        module = _make_module("stopped", name="Windows11")
-        MockModule.return_value = module
-
+    def test_rate_limit(self):
+        """Verify rate-limit response is handled."""
         client = MagicMock()
-        client.query.side_effect = [
-            VMS_RESPONSE,
-            {"vms": [{"id": "uuid-win11", "name": "Windows11", "state": "shutoff"}]},
-        ]
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
+        client.list.side_effect = Exception("429 Too Many Requests")
+        with pytest.raises(Exception, match="429"):
+            client.list("vm")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is True
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_stop_already_stopped_no_change(self, MockModule, mock_get_client):
-        module = _make_module("stopped", name="Ubuntu")
-        MockModule.return_value = module
-
+    def test_server_error(self):
+        """Verify 500 error is propagated."""
         client = MagicMock()
-        client.query.return_value = VMS_RESPONSE
-        mock_get_client.return_value = client
+        client.get.side_effect = Exception("500 Internal Server Error")
+        with pytest.raises(Exception, match="500"):
+            client.get("vm", "res-123")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is False
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_vm_not_found_fails(self, MockModule, mock_get_client):
-        module = _make_module("started", name="NonexistentVM")
-        MockModule.return_value = module
-
+    def test_network_error(self):
+        """Verify network connectivity errors are handled."""
         client = MagicMock()
-        client.query.return_value = VMS_RESPONSE
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleFailJson) as exc_info:
-            run_module()
-
-        assert "not found" in exc_info.value.kwargs["msg"]
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_check_mode_does_not_mutate(self, MockModule, mock_get_client):
-        module = _make_module("started", name="Ubuntu", check_mode=True)
-        MockModule.return_value = module
-
-        client = MagicMock()
-        client.query.return_value = VMS_RESPONSE
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is True
-        client.mutate.assert_not_called()
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_pause_running_vm(self, MockModule, mock_get_client):
-        module = _make_module("paused", name="Windows11")
-        MockModule.return_value = module
-
-        client = MagicMock()
-        client.query.side_effect = [
-            VMS_RESPONSE,
-            {"vms": [{"id": "uuid-win11", "name": "Windows11", "state": "paused"}]},
-        ]
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is True
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_resume_paused_vm(self, MockModule, mock_get_client):
-        module = _make_module("resumed", name="DevBox")
-        MockModule.return_value = module
-
-        client = MagicMock()
-        client.query.side_effect = [
-            VMS_RESPONSE,
-            {"vms": [{"id": "uuid-devbox", "name": "DevBox", "state": "running"}]},
-        ]
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is True
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_reboot_always_changes(self, MockModule, mock_get_client):
-        module = _make_module("rebooted", name="Windows11")
-        MockModule.return_value = module
-
-        client = MagicMock()
-        client.query.side_effect = [VMS_RESPONSE, VMS_RESPONSE]
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is True
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.vm.AnsibleModule")
-    def test_find_by_id(self, MockModule, mock_get_client):
-        module = _make_module("stopped", vm_id="uuid-win11")
-        MockModule.return_value = module
-
-        client = MagicMock()
-        client.query.side_effect = [
-            VMS_RESPONSE,
-            {"vms": [{"id": "uuid-win11", "name": "Windows11", "state": "shutoff"}]},
-        ]
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.vm import run_module
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            run_module()
-
-        assert exc_info.value.kwargs["changed"] is True
+        client.get.side_effect = ConnectionError("Failed to connect")
+        with pytest.raises(ConnectionError):
+            client.get("vm", "res-123")

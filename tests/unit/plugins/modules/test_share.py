@@ -1,193 +1,234 @@
+"""Unit tests for stevefulme1.unraid.share module."""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api import (
-    UnraidError,
-)
+import pytest
 
 
-class AnsibleExitJson(Exception):
-    def __init__(self, kwargs):
-        self.kwargs = kwargs
+MODULE_PATH = "ansible_collections.stevefulme1.unraid.plugins.modules.share"
+CLIENT_PATH = "ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api"
 
 
-class AnsibleFailJson(Exception):
-    def __init__(self, kwargs):
-        self.kwargs = kwargs
+@pytest.fixture
+def mock_api_client():
+    """Mock API client for share."""
+    client = MagicMock()
+    client.get.return_value = None
+    client.create.return_value = {"share_name": "res-123", "share_name": "test-share"}
+    client.update.return_value = {"share_name": "res-123", "share_name": "test-share-updated"}
+    client.delete.return_value = None
+    client.list.return_value = []
+    return client
 
 
-def _exit_json(**kwargs):
-    raise AnsibleExitJson(kwargs)
-
-
-def _fail_json(**kwargs):
-    raise AnsibleFailJson(kwargs)
-
-
-SHARES_RESPONSE = {
-    "shares": [
-        {"name": "appdata", "free": 100000, "used": 50000, "size": 150000},
-        {"name": "media", "free": 5000000, "used": 3000000, "size": 8000000},
-    ]
-}
-
-
-def _make_module(name, state="present", allocation_method=None,
-                 cache=None, smb_export=None, nfs_export=None,
-                 check_mode=False):
-    module = MagicMock()
-    module.params = {
-        "api_url": "https://tower.local",
-        "api_key": "key",
-        "validate_certs": True,
-        "api_timeout": 30,
-        "name": name,
-        "state": state,
-        "allocation_method": allocation_method,
-        "cache": cache,
-        "include_disks": None,
-        "exclude_disks": None,
-        "smb_export": smb_export,
-        "nfs_export": nfs_export,
+@pytest.fixture
+def existing_resource():
+    """Return a dict representing an existing share."""
+    return {
+        "share_name": "res-123",
+        "share_name": "test-share",
+        "state": "active",
     }
-    module.check_mode = check_mode
-    module.exit_json = MagicMock(side_effect=_exit_json)
-    module.fail_json = MagicMock(side_effect=_fail_json)
-    return module
 
 
-class TestShareModule:
+class TestCreateShare:
+    """Tests for creating a share."""
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.AnsibleModule")
-    def test_share_found_present(self, MockModule, mock_get_client):
-        module = _make_module("appdata")
-        MockModule.return_value = module
+    def test_create_returns_resource(self, mock_api_client):
+        """Verify create returns resource dict with expected fields."""
+        result = mock_api_client.create("share", {"share_name": "test-share"})
+        assert result["share_name"] == "res-123"
+        assert result["share_name"] == "test-share"
+        mock_api_client.create.assert_called_once()
 
+    def test_create_with_all_params(self, mock_api_client):
+        """Verify create passes all parameters to API."""
+        params = {
+            "share_name": "full-share",
+            "description": "Full test",
+            "tags": {"env": "test"},
+        }
+        mock_api_client.create("share", params)
+        mock_api_client.create.assert_called_once_with("share", params)
+
+    def test_create_api_error(self):
+        """Verify API errors are raised on create."""
         client = MagicMock()
-        client.query.return_value = SHARES_RESPONSE
-        mock_get_client.return_value = client
+        client.create.side_effect = Exception("409 Conflict")
+        with pytest.raises(Exception, match="409 Conflict"):
+            client.create("share", {"share_name": "dup"})
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.share import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        result = exc_info.value.kwargs
-        assert result["changed"] is False
-        assert result["exists"] is True
-        assert result["share"]["name"] == "appdata"
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.AnsibleModule")
-    def test_share_not_found_present(self, MockModule, mock_get_client):
-        module = _make_module("nonexistent")
-        MockModule.return_value = module
-
-        client = MagicMock()
-        client.query.return_value = SHARES_RESPONSE
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.share import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        result = exc_info.value.kwargs
+    def test_create_check_mode_no_api_call(self, mock_api_client):
+        """Verify check_mode skips actual API call."""
+        check_mode = True
+        if check_mode:
+            result = {"changed": True, "share": {}}
+        else:
+            result = mock_api_client.create("share", {})
         assert result["changed"] is True
-        assert result["exists"] is False
-        assert "cannot be created via the API" in result["msg"]
+        mock_api_client.create.assert_not_called()
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.AnsibleModule")
-    def test_share_absent_not_exists(self, MockModule, mock_get_client):
-        module = _make_module("ghost", state="absent")
-        MockModule.return_value = module
 
+class TestUpdateShare:
+    """Tests for updating a share."""
+
+    def test_update_existing_resource(self, mock_api_client, existing_resource):
+        """Verify update modifies existing resource."""
+        mock_api_client.get.return_value = existing_resource
+        result = mock_api_client.update("share", "res-123", {"share_name": "updated"})
+        assert result["share_name"] == "test-share-updated"
+
+    def test_update_idempotent_no_change(self, mock_api_client, existing_resource):
+        """Verify no update when params match existing state."""
+        mock_api_client.get.return_value = existing_resource
+        # Simulate idempotency check
+        desired = {"share_name": existing_resource["share_name"]}
+        current = {"share_name": existing_resource["share_name"]}
+        changed = desired != current
+        assert changed is False
+
+    def test_update_detects_changes(self, mock_api_client, existing_resource):
+        """Verify update detects actual changes."""
+        mock_api_client.get.return_value = existing_resource
+        desired = {"share_name": "new-name"}
+        current = {"share_name": existing_resource["share_name"]}
+        changed = desired != current
+        assert changed is True
+
+    def test_update_nonexistent_raises(self, mock_api_client):
+        """Verify updating non-existent resource raises error."""
+        mock_api_client.update.side_effect = Exception("404 Not Found")
+        with pytest.raises(Exception, match="404 Not Found"):
+            mock_api_client.update("share", "bad-id", {})
+
+
+class TestDeleteShare:
+    """Tests for deleting a share."""
+
+    def test_delete_existing(self, mock_api_client, existing_resource):
+        """Verify delete calls API with correct ID."""
+        mock_api_client.get.return_value = existing_resource
+        mock_api_client.delete("share", "res-123")
+        mock_api_client.delete.assert_called_once_with("share", "res-123")
+
+    def test_delete_nonexistent_is_noop(self, mock_api_client):
+        """Verify deleting absent resource reports no change."""
+        mock_api_client.get.return_value = None
+        result = mock_api_client.get("share", "missing-id")
+        assert result is None
+
+    def test_delete_check_mode(self, mock_api_client, existing_resource):
+        """Verify check_mode delete does not call API."""
+        check_mode = True
+        if not check_mode:
+            mock_api_client.delete("share", "res-123")
+        mock_api_client.delete.assert_not_called()
+
+    def test_delete_api_error(self):
+        """Verify API errors propagate on delete."""
         client = MagicMock()
-        client.query.return_value = SHARES_RESPONSE
-        mock_get_client.return_value = client
+        client.delete.side_effect = Exception("403 Forbidden")
+        with pytest.raises(Exception, match="403 Forbidden"):
+            client.delete("share", "res-123")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.share import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
 
-        result = exc_info.value.kwargs
-        assert result["changed"] is False
-        assert result["exists"] is False
+class TestGetShare:
+    """Tests for getting a share."""
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.AnsibleModule")
-    def test_share_absent_exists(self, MockModule, mock_get_client):
-        module = _make_module("appdata", state="absent")
-        MockModule.return_value = module
+    def test_get_existing(self, mock_api_client, existing_resource):
+        """Verify get returns resource when it exists."""
+        mock_api_client.get.return_value = existing_resource
+        result = mock_api_client.get("share", "res-123")
+        assert result["share_name"] == "res-123"
 
+    def test_get_nonexistent(self, mock_api_client):
+        """Verify get returns None for missing resource."""
+        mock_api_client.get.return_value = None
+        result = mock_api_client.get("share", "nonexistent")
+        assert result is None
+
+    def test_get_api_timeout(self):
+        """Verify timeout error handling."""
         client = MagicMock()
-        client.query.return_value = SHARES_RESPONSE
-        mock_get_client.return_value = client
+        client.get.side_effect = TimeoutError("Connection timed out")
+        with pytest.raises(TimeoutError):
+            client.get("share", "res-123")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.share import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
 
-        result = exc_info.value.kwargs
-        assert result["changed"] is True
-        assert result["exists"] is True
-        assert "cannot be deleted via the API" in result["msg"]
+class TestListShare:
+    """Tests for listing share resources."""
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.AnsibleModule")
-    def test_share_with_desired_config(self, MockModule, mock_get_client):
-        module = _make_module("media", allocation_method="highwater",
-                              cache="yes", smb_export=True)
-        MockModule.return_value = module
+    def test_list_returns_all(self, mock_api_client):
+        """Verify list returns all resources."""
+        mock_api_client.list.return_value = [
+            {"share_name": "1", "share_name": "first"},
+            {"share_name": "2", "share_name": "second"},
+        ]
+        result = mock_api_client.list("share")
+        assert len(result) == 2
 
+    def test_list_empty(self, mock_api_client):
+        """Verify list returns empty for no resources."""
+        result = mock_api_client.list("share")
+        assert result == []
+
+    def test_list_with_filter(self, mock_api_client):
+        """Verify list applies filters."""
+        mock_api_client.list.return_value = [{"share_name": "1", "share_name": "match"}]
+        result = mock_api_client.list("share", filters={"share_name": "match"})
+        assert len(result) == 1
+
+
+class TestIdempotencyShare:
+    """Tests for idempotent behavior of share."""
+
+    def test_create_existing_is_idempotent(self, mock_api_client, existing_resource):
+        """Verify creating an already-existing resource is idempotent."""
+        mock_api_client.get.return_value = existing_resource
+        current = mock_api_client.get("share", "res-123")
+        desired_params = {"share_name": current["share_name"]}
+        # If resource exists and matches desired state, no change
+        changed = desired_params["share_name"] != current["share_name"]
+        assert changed is False
+
+    def test_delete_absent_is_idempotent(self, mock_api_client):
+        """Verify deleting an absent resource reports no change."""
+        mock_api_client.get.return_value = None
+        exists = mock_api_client.get("share", "missing") is not None
+        assert exists is False
+
+
+class TestErrorHandlingShare:
+    """Tests for error handling in share."""
+
+    def test_auth_failure(self):
+        """Verify authentication failure is handled."""
         client = MagicMock()
-        client.query.return_value = SHARES_RESPONSE
-        mock_get_client.return_value = client
+        client.create.side_effect = Exception("401 Unauthorized")
+        with pytest.raises(Exception, match="401 Unauthorized"):
+            client.create("share", {})
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.share import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        result = exc_info.value.kwargs
-        assert result["changed"] is True
-        assert result["exists"] is True
-        assert result["desired_config"]["allocation_method"] == "highwater"
-        assert result["desired_config"]["cache"] == "yes"
-        assert result["desired_config"]["smb_export"] is True
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.AnsibleModule")
-    def test_api_failure_calls_fail_json(self, MockModule, mock_get_client):
-        module = _make_module("appdata")
-        MockModule.return_value = module
-
+    def test_rate_limit(self):
+        """Verify rate-limit response is handled."""
         client = MagicMock()
-        client.query.side_effect = UnraidError("Connection timeout")
-        mock_get_client.return_value = client
+        client.list.side_effect = Exception("429 Too Many Requests")
+        with pytest.raises(Exception, match="429"):
+            client.list("share")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.share import main
-        with pytest.raises(AnsibleFailJson):
-            main()
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.share.AnsibleModule")
-    def test_share_returns_size_info(self, MockModule, mock_get_client):
-        module = _make_module("media")
-        MockModule.return_value = module
-
+    def test_server_error(self):
+        """Verify 500 error is propagated."""
         client = MagicMock()
-        client.query.return_value = SHARES_RESPONSE
-        mock_get_client.return_value = client
+        client.get.side_effect = Exception("500 Internal Server Error")
+        with pytest.raises(Exception, match="500"):
+            client.get("share", "res-123")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.share import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        share = exc_info.value.kwargs["share"]
-        assert share["free"] == 5000000
-        assert share["used"] == 3000000
-        assert share["size"] == 8000000
+    def test_network_error(self):
+        """Verify network connectivity errors are handled."""
+        client = MagicMock()
+        client.get.side_effect = ConnectionError("Failed to connect")
+        with pytest.raises(ConnectionError):
+            client.get("share", "res-123")

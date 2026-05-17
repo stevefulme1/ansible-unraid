@@ -1,57 +1,63 @@
-from __future__ import absolute_import, division, print_function
+"""Shared test fixtures for stevefulme1.unraid collection."""
 
-__metaclass__ = type
+import os
+import sys
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock
 
-
-class AnsibleExitJson(Exception):
-    """Exception raised by mocked exit_json to halt module execution."""
-    def __init__(self, kwargs):
-        super().__init__()
-        self.kwargs = kwargs
-
-
-class AnsibleFailJson(Exception):
-    """Exception raised by mocked fail_json to halt module execution."""
-    def __init__(self, kwargs):
-        super().__init__()
-        self.kwargs = kwargs
+# Ensure collection path is importable
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 
 
 @pytest.fixture
 def mock_module():
-    """Create a mock AnsibleModule with standard Unraid params."""
+    """Create a mock AnsibleModule."""
     module = MagicMock()
     module.params = {
-        "api_url": "https://tower.local",
-        "api_key": "test-api-key-12345",
+        "state": "present",
+        "api_url": "https://unraid.local",
+        "api_key": "test-unraid-key",
         "validate_certs": True,
-        "api_timeout": 30,
     }
     module.check_mode = False
-
-    def _exit_json(**kwargs):
-        raise AnsibleExitJson(kwargs)
-
-    def _fail_json(**kwargs):
-        raise AnsibleFailJson(kwargs)
-
-    module.exit_json = MagicMock(side_effect=_exit_json)
-    module.fail_json = MagicMock(side_effect=_fail_json)
-
+    module.fail_json = MagicMock(side_effect=SystemExit(1))
+    module.exit_json = MagicMock(side_effect=SystemExit(0))
     return module
 
 
 @pytest.fixture
+def mock_module_check_mode(mock_module):
+    """Create a mock AnsibleModule in check mode."""
+    mock_module.check_mode = True
+    return mock_module
+
+
+@pytest.fixture
 def mock_client():
-    """Create a mock UnraidClient with query/mutate stubs."""
+    """Create a mock API client."""
     client = MagicMock()
-    client.api_url = "https://tower.local/graphql"
-    client.api_key = "test-api-key-12345"
-    client.validate_certs = True
-    client.timeout = 30
-    client.query = MagicMock(return_value={})
-    client.mutate = MagicMock(return_value={})
+    client.get.return_value = None
+    client.create.return_value = {"id": "test-123", "name": "test-resource"}
+    client.update.return_value = {"id": "test-123", "name": "test-resource-updated"}
+    client.delete.return_value = None
+    client.list.return_value = []
+    return client
+
+
+@pytest.fixture
+def mock_client_existing(mock_client):
+    """Create a mock API client that returns an existing resource."""
+    mock_client.get.return_value = {"id": "test-123", "name": "test-resource"}
+    return mock_client
+
+
+@pytest.fixture
+def error_client():
+    """Create a mock API client that raises errors."""
+    client = MagicMock()
+    client.get.side_effect = Exception("API connection error")
+    client.create.side_effect = Exception("API creation error")
+    client.update.side_effect = Exception("API update error")
+    client.delete.side_effect = Exception("API deletion error")
     return client

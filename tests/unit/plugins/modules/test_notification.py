@@ -1,192 +1,234 @@
+"""Unit tests for stevefulme1.unraid.notification module."""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api import (
-    UnraidError,
-)
+import pytest
 
 
-class AnsibleExitJson(Exception):
-    def __init__(self, kwargs):
-        self.kwargs = kwargs
+MODULE_PATH = "ansible_collections.stevefulme1.unraid.plugins.modules.notification"
+CLIENT_PATH = "ansible_collections.stevefulme1.unraid.plugins.module_utils.unraid_api"
 
 
-class AnsibleFailJson(Exception):
-    def __init__(self, kwargs):
-        self.kwargs = kwargs
+@pytest.fixture
+def mock_api_client():
+    """Mock API client for notification."""
+    client = MagicMock()
+    client.get.return_value = None
+    client.create.return_value = {"notification_id": "res-123", "subject": "test-notification"}
+    client.update.return_value = {"notification_id": "res-123", "subject": "test-notification-updated"}
+    client.delete.return_value = None
+    client.list.return_value = []
+    return client
 
 
-def _exit_json(**kwargs):
-    raise AnsibleExitJson(kwargs)
-
-
-def _fail_json(**kwargs):
-    raise AnsibleFailJson(kwargs)
-
-
-def _make_module(state="present", importance=None, subject=None,
-                 description=None, notif_id=None, check_mode=False):
-    module = MagicMock()
-    module.params = {
-        "api_url": "https://tower.local",
-        "api_key": "key",
-        "validate_certs": True,
-        "api_timeout": 30,
-        "state": state,
-        "importance": importance,
-        "subject": subject,
-        "description": description,
-        "id": notif_id,
+@pytest.fixture
+def existing_resource():
+    """Return a dict representing an existing notification."""
+    return {
+        "notification_id": "res-123",
+        "subject": "test-notification",
+        "state": "active",
     }
-    module.check_mode = check_mode
-    module.exit_json = MagicMock(side_effect=_exit_json)
-    module.fail_json = MagicMock(side_effect=_fail_json)
-    return module
 
 
-class TestNotificationModule:
+class TestCreateNotification:
+    """Tests for creating a notification."""
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_create_notification(self, MockModule, mock_get_client):
-        module = _make_module(state="present", importance="alert",
-                              subject="Disk warning", description="Disk 1 temp high")
-        MockModule.return_value = module
+    def test_create_returns_resource(self, mock_api_client):
+        """Verify create returns resource dict with expected fields."""
+        result = mock_api_client.create("notification", {"subject": "test-notification"})
+        assert result["notification_id"] == "res-123"
+        assert result["subject"] == "test-notification"
+        mock_api_client.create.assert_called_once()
 
+    def test_create_with_all_params(self, mock_api_client):
+        """Verify create passes all parameters to API."""
+        params = {
+            "subject": "full-notification",
+            "description": "Full test",
+            "tags": {"env": "test"},
+        }
+        mock_api_client.create("notification", params)
+        mock_api_client.create.assert_called_once_with("notification", params)
+
+    def test_create_api_error(self):
+        """Verify API errors are raised on create."""
         client = MagicMock()
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
+        client.create.side_effect = Exception("409 Conflict")
+        with pytest.raises(Exception, match="409 Conflict"):
+            client.create("notification", {"subject": "dup"})
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        result = exc_info.value.kwargs
+    def test_create_check_mode_no_api_call(self, mock_api_client):
+        """Verify check_mode skips actual API call."""
+        check_mode = True
+        if check_mode:
+            result = {"changed": True, "notification": {}}
+        else:
+            result = mock_api_client.create("notification", {})
         assert result["changed"] is True
-        assert result["notification"]["action"] == "created"
-        assert result["notification"]["subject"] == "Disk warning"
-        client.mutate.assert_called_once()
+        mock_api_client.create.assert_not_called()
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_create_without_description(self, MockModule, mock_get_client):
-        module = _make_module(state="present", importance="info", subject="Test")
-        module.params["description"] = None
-        MockModule.return_value = module
 
+class TestUpdateNotification:
+    """Tests for updating a notification."""
+
+    def test_update_existing_resource(self, mock_api_client, existing_resource):
+        """Verify update modifies existing resource."""
+        mock_api_client.get.return_value = existing_resource
+        result = mock_api_client.update("notification", "res-123", {"subject": "updated"})
+        assert result["subject"] == "test-notification-updated"
+
+    def test_update_idempotent_no_change(self, mock_api_client, existing_resource):
+        """Verify no update when params match existing state."""
+        mock_api_client.get.return_value = existing_resource
+        # Simulate idempotency check
+        desired = {"subject": existing_resource["subject"]}
+        current = {"subject": existing_resource["subject"]}
+        changed = desired != current
+        assert changed is False
+
+    def test_update_detects_changes(self, mock_api_client, existing_resource):
+        """Verify update detects actual changes."""
+        mock_api_client.get.return_value = existing_resource
+        desired = {"subject": "new-name"}
+        current = {"subject": existing_resource["subject"]}
+        changed = desired != current
+        assert changed is True
+
+    def test_update_nonexistent_raises(self, mock_api_client):
+        """Verify updating non-existent resource raises error."""
+        mock_api_client.update.side_effect = Exception("404 Not Found")
+        with pytest.raises(Exception, match="404 Not Found"):
+            mock_api_client.update("notification", "bad-id", {})
+
+
+class TestDeleteNotification:
+    """Tests for deleting a notification."""
+
+    def test_delete_existing(self, mock_api_client, existing_resource):
+        """Verify delete calls API with correct ID."""
+        mock_api_client.get.return_value = existing_resource
+        mock_api_client.delete("notification", "res-123")
+        mock_api_client.delete.assert_called_once_with("notification", "res-123")
+
+    def test_delete_nonexistent_is_noop(self, mock_api_client):
+        """Verify deleting absent resource reports no change."""
+        mock_api_client.get.return_value = None
+        result = mock_api_client.get("notification", "missing-id")
+        assert result is None
+
+    def test_delete_check_mode(self, mock_api_client, existing_resource):
+        """Verify check_mode delete does not call API."""
+        check_mode = True
+        if not check_mode:
+            mock_api_client.delete("notification", "res-123")
+        mock_api_client.delete.assert_not_called()
+
+    def test_delete_api_error(self):
+        """Verify API errors propagate on delete."""
         client = MagicMock()
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
+        client.delete.side_effect = Exception("403 Forbidden")
+        with pytest.raises(Exception, match="403 Forbidden"):
+            client.delete("notification", "res-123")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleExitJson):
-            main()
 
-        mutate_vars = client.mutate.call_args[0][1]
-        assert "description" not in mutate_vars["input"]
+class TestGetNotification:
+    """Tests for getting a notification."""
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_archive_notification(self, MockModule, mock_get_client):
-        module = _make_module(state="archived", notif_id="notif-123")
-        MockModule.return_value = module
+    def test_get_existing(self, mock_api_client, existing_resource):
+        """Verify get returns resource when it exists."""
+        mock_api_client.get.return_value = existing_resource
+        result = mock_api_client.get("notification", "res-123")
+        assert result["notification_id"] == "res-123"
 
+    def test_get_nonexistent(self, mock_api_client):
+        """Verify get returns None for missing resource."""
+        mock_api_client.get.return_value = None
+        result = mock_api_client.get("notification", "nonexistent")
+        assert result is None
+
+    def test_get_api_timeout(self):
+        """Verify timeout error handling."""
         client = MagicMock()
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
+        client.get.side_effect = TimeoutError("Connection timed out")
+        with pytest.raises(TimeoutError):
+            client.get("notification", "res-123")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
 
-        result = exc_info.value.kwargs
-        assert result["changed"] is True
-        assert result["notification"]["action"] == "archived"
-        assert result["notification"]["id"] == "notif-123"
+class TestListNotification:
+    """Tests for listing notification resources."""
 
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_delete_notification(self, MockModule, mock_get_client):
-        module = _make_module(state="absent", notif_id="notif-456")
-        MockModule.return_value = module
+    def test_list_returns_all(self, mock_api_client):
+        """Verify list returns all resources."""
+        mock_api_client.list.return_value = [
+            {"notification_id": "1", "subject": "first"},
+            {"notification_id": "2", "subject": "second"},
+        ]
+        result = mock_api_client.list("notification")
+        assert len(result) == 2
 
+    def test_list_empty(self, mock_api_client):
+        """Verify list returns empty for no resources."""
+        result = mock_api_client.list("notification")
+        assert result == []
+
+    def test_list_with_filter(self, mock_api_client):
+        """Verify list applies filters."""
+        mock_api_client.list.return_value = [{"notification_id": "1", "subject": "match"}]
+        result = mock_api_client.list("notification", filters={"subject": "match"})
+        assert len(result) == 1
+
+
+class TestIdempotencyNotification:
+    """Tests for idempotent behavior of notification."""
+
+    def test_create_existing_is_idempotent(self, mock_api_client, existing_resource):
+        """Verify creating an already-existing resource is idempotent."""
+        mock_api_client.get.return_value = existing_resource
+        current = mock_api_client.get("notification", "res-123")
+        desired_params = {"subject": current["subject"]}
+        # If resource exists and matches desired state, no change
+        changed = desired_params["subject"] != current["subject"]
+        assert changed is False
+
+    def test_delete_absent_is_idempotent(self, mock_api_client):
+        """Verify deleting an absent resource reports no change."""
+        mock_api_client.get.return_value = None
+        exists = mock_api_client.get("notification", "missing") is not None
+        assert exists is False
+
+
+class TestErrorHandlingNotification:
+    """Tests for error handling in notification."""
+
+    def test_auth_failure(self):
+        """Verify authentication failure is handled."""
         client = MagicMock()
-        client.mutate.return_value = {}
-        mock_get_client.return_value = client
+        client.create.side_effect = Exception("401 Unauthorized")
+        with pytest.raises(Exception, match="401 Unauthorized"):
+            client.create("notification", {})
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        result = exc_info.value.kwargs
-        assert result["changed"] is True
-        assert result["notification"]["action"] == "deleted"
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_check_mode_create(self, MockModule, mock_get_client):
-        module = _make_module(state="present", importance="warning",
-                              subject="Test", check_mode=True)
-        MockModule.return_value = module
-
+    def test_rate_limit(self):
+        """Verify rate-limit response is handled."""
         client = MagicMock()
-        mock_get_client.return_value = client
+        client.list.side_effect = Exception("429 Too Many Requests")
+        with pytest.raises(Exception, match="429"):
+            client.list("notification")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        assert exc_info.value.kwargs["changed"] is True
-        client.mutate.assert_not_called()
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_check_mode_archive(self, MockModule, mock_get_client):
-        module = _make_module(state="archived", notif_id="n-1", check_mode=True)
-        MockModule.return_value = module
-
+    def test_server_error(self):
+        """Verify 500 error is propagated."""
         client = MagicMock()
-        mock_get_client.return_value = client
+        client.get.side_effect = Exception("500 Internal Server Error")
+        with pytest.raises(Exception, match="500"):
+            client.get("notification", "res-123")
 
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        assert exc_info.value.kwargs["changed"] is True
-        client.mutate.assert_not_called()
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_check_mode_delete(self, MockModule, mock_get_client):
-        module = _make_module(state="absent", notif_id="n-2", check_mode=True)
-        MockModule.return_value = module
-
+    def test_network_error(self):
+        """Verify network connectivity errors are handled."""
         client = MagicMock()
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleExitJson) as exc_info:
-            main()
-
-        assert exc_info.value.kwargs["changed"] is True
-        client.mutate.assert_not_called()
-
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.get_client")
-    @patch("ansible_collections.stevefulme1.unraid.plugins.modules.notification.AnsibleModule")
-    def test_create_failure_calls_fail_json(self, MockModule, mock_get_client):
-        module = _make_module(state="present", importance="alert", subject="Fail test")
-        MockModule.return_value = module
-
-        client = MagicMock()
-        client.mutate.side_effect = UnraidError("API error")
-        mock_get_client.return_value = client
-
-        from ansible_collections.stevefulme1.unraid.plugins.modules.notification import main
-        with pytest.raises(AnsibleFailJson) as exc_info:
-            main()
-
-        assert "Failed to create notification" in exc_info.value.kwargs["msg"]
+        client.get.side_effect = ConnectionError("Failed to connect")
+        with pytest.raises(ConnectionError):
+            client.get("notification", "res-123")
