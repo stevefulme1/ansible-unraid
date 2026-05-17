@@ -1,8 +1,9 @@
 ---
 galaxy_info:
   author: Steve Fulmer
-  description: "Create and configure user shares"
-  license: Apache-2.0
+  description: >-
+    Configure Unraid user shares with SMB/NFS access and cache mover settings
+  license: GPL-3.0-or-later
   min_ansible_version: "2.16"
   platforms:
     - name: GenericLinux
@@ -10,4 +11,8 @@ galaxy_info:
         - all
   galaxy_tags:
     - unraid
+    - shares
+    - smb
+    - nfs
+    - cache
 dependencies: []

@@ -1,14 +1,64 @@
 ---
 # defaults/main.yml for unraid_share_setup
 
-# Target host
+# Connection
 unraid_share_setup_host: ""
-
-# Authentication
-unraid_share_setup_username: ""
-unraid_share_setup_password: ""
 unraid_share_setup_api_key: ""
-
-# Behavior
 unraid_share_setup_validate_certs: true
-unraid_share_setup_state: present
+
+# User shares
+unraid_share_setup_shares:
+  []
+  # - name: "media"
+  #   comment: "Media library"
+  #   use_cache: "prefer"
+  #   include_disks: []
+  #   exclude_disks: []
+  #   split_level: "auto"
+  #   allocation_method: "highwater"
+  #   floor: "0"
+  #   cow: "auto"
+
+# SMB share access
+unraid_share_setup_smb_config:
+  enabled: true
+  # workgroup: "WORKGROUP"
+  # local_master: true
+  # enhanced_macOS: true
+
+unraid_share_setup_smb_shares:
+  []
+  # - name: "media"
+  #   security: "public"
+  #   export: "yes"
+  # - name: "backups"
+  #   security: "private"
+  #   export: "yes"
+  #   valid_users:
+  #     - "admin"
+
+# NFS exports
+unraid_share_setup_nfs_config:
+  enabled: false
+  # tuning_enabled: false
+  # count: 8
+
+unraid_share_setup_nfs_shares:
+  []
+  # - name: "media"
+  #   security: "public"
+  #   export: "yes"
+  #   rule: "*(rw,sec=sys,insecure,anongid=100,anonuid=99,no_root_squash)"
+
+# Cache mover settings
+unraid_share_setup_cache_mover:
+  schedule_enabled: true
+  schedule: "40 3 * * *"
+  action: "auto"
+
+# Notifications for share events
+unraid_share_setup_notifications:
+  []
+  # - agent: "email"
+  #   name: "share-alerts"
+  #   events: ["array_started", "disk_warning"]

@@ -1,8 +1,9 @@
 ---
 galaxy_info:
   author: Steve Fulmer
-  description: "Deploy Docker containers"
-  license: Apache-2.0
+  description: >-
+    Deploy Docker containers with networks, volumes, and compose stacks on Unraid
+  license: GPL-3.0-or-later
   min_ansible_version: "2.16"
   platforms:
     - name: GenericLinux
@@ -10,4 +11,6 @@ galaxy_info:
         - all
   galaxy_tags:
     - unraid
+    - docker
+    - containers
 dependencies: []

@@ -1,8 +1,9 @@
 ---
 galaxy_info:
   author: Steve Fulmer
-  description: "Configure array with parity and data drives"
-  license: Apache-2.0
+  description: >-
+    Configure Unraid array with parity, data drives, cache pools, and monitoring
+  license: GPL-3.0-or-later
   min_ansible_version: "2.16"
   platforms:
     - name: GenericLinux
@@ -10,4 +11,7 @@ galaxy_info:
         - all
   galaxy_tags:
     - unraid
+    - storage
+    - array
+    - parity
 dependencies: []
