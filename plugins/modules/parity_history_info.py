@@ -25,9 +25,6 @@ options:
         description: API host address.
         type: str
         required: true
-    limit:
-        description: ID of a specific resource.
-        type: str
     username:
         description: Authentication username.
         type: str

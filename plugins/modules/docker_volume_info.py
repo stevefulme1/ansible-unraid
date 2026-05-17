@@ -21,6 +21,7 @@ description:
       to documenting usage of C(docker volume ls --format json) via SSH.
     - Requires Unraid 7.2 or later.
 
+options:
     limit:
         description:
             - Maximum number of results to return.

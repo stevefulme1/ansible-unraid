@@ -20,6 +20,7 @@ description:
     - Useful for pre-deployment validation and health-check playbooks.
     - Requires Unraid 7.2 or later.
 
+options:
     limit:
         description:
             - Maximum number of results to return.

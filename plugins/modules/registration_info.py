@@ -25,6 +25,7 @@ description:
     validity across a fleet of Unraid servers.
   - Requires Unraid 7.2 or later.
 
+options:
     limit:
         description:
             - Maximum number of results to return.

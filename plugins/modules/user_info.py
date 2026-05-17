@@ -22,6 +22,7 @@ description:
   - This is an info module and never changes state on the target.
   - Requires Unraid 7.2 or later.
 
+options:
     limit:
         description:
             - Maximum number of results to return.
