@@ -1,0 +1,40 @@
+---
+# extensions/audit/event_query.yml
+# Maps Unraid module return values to the AAP Normalized Resource Taxonomy.
+# Return keys: vm (has id/name), container (has id/names), share (has name).
+
+stevefulme1.unraid.vm:
+  query: >-
+    {
+      name: .vm.name,
+      canonical_facts: {
+        uuid: .vm.id
+      },
+      facts: {
+        device_type: "virtual_machine"
+      }
+    }
+
+stevefulme1.unraid.docker_container:
+  query: >-
+    {
+      name: .container.names[0],
+      canonical_facts: {
+        uuid: .container.id
+      },
+      facts: {
+        device_type: "container"
+      }
+    }
+
+stevefulme1.unraid.share:
+  query: >-
+    {
+      name: .share.name,
+      canonical_facts: {
+        uuid: .share.name
+      },
+      facts: {
+        device_type: "file_storage"
+      }
+    }
