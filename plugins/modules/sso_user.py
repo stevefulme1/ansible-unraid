@@ -142,11 +142,11 @@ def main():
     )
 
     if state == "present":
-        cmd = "unraid-api sso add-user %s" % email
+        cmd = ["unraid-api", "sso", "add-user", email]
 
         if module.check_mode:
             result["changed"] = True
-            result["command"] = cmd
+            result["command"] = " ".join(cmd)
             result["msg"] = "Would add SSO user '%s'." % email
             module.exit_json(**result)
 
@@ -162,15 +162,15 @@ def main():
             )
 
         result["changed"] = True
-        result["command"] = cmd
+        result["command"] = " ".join(cmd)
         result["msg"] = "SSO user '%s' added successfully." % email
 
     elif state == "absent":
-        cmd = "unraid-api sso remove-user %s" % email
+        cmd = ["unraid-api", "sso", "remove-user", email]
 
         if module.check_mode:
             result["changed"] = True
-            result["command"] = cmd
+            result["command"] = " ".join(cmd)
             result["msg"] = "Would remove SSO user '%s'." % email
             module.exit_json(**result)
 
@@ -186,7 +186,7 @@ def main():
             )
 
         result["changed"] = True
-        result["command"] = cmd
+        result["command"] = " ".join(cmd)
         result["msg"] = "SSO user '%s' removed successfully." % email
 
     module.exit_json(**result)

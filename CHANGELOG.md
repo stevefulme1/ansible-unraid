@@ -5,6 +5,14 @@ All notable changes to **stevefulme1.unraid** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-05-18
+
+### Security
+
+- Fix command injection in `sso_user.py` — use list-form `run_command` instead of string interpolation
+- Fix `use_unsafe_shell=True` in `vm_snapshot.py` — switch to safe shell and remove `2>/dev/null` redirection
+- Remove dead injection-vulnerable code in `ssh_key.py` (`echo %s >> %s` pattern)
+
 ## [2.0.0] - 2026-05-15
 
 ### Added

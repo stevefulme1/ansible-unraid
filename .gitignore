@@ -10,3 +10,22 @@ build/
 tests/output/
 .venv/
 .test_collections/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# Ansible
+*.retry

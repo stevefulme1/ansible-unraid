@@ -156,7 +156,7 @@ QUERY_VMS = """
 """
 
 VIRSH_COMMANDS = {
-    "list": "virsh snapshot-list --domain {vm_name} --name 2>/dev/null",
+    "list": "virsh snapshot-list --domain {vm_name} --name",
     "create": "virsh snapshot-create-as --domain {vm_name} --name {snapshot_name}",
     "delete": "virsh snapshot-delete --domain {vm_name} --snapshotname {snapshot_name}",
     "revert": "virsh snapshot-revert --domain {vm_name} --snapshotname {snapshot_name}",
@@ -227,7 +227,7 @@ def main():
 
     # List existing snapshots
     list_cmd = _build_virsh_cmd(VIRSH_COMMANDS["list"], vm_name)
-    rc, stdout, stderr = module.run_command(list_cmd, use_unsafe_shell=True)
+    rc, stdout, stderr = module.run_command(list_cmd, use_unsafe_shell=False)
     existing_snapshots = [
         s.strip() for s in stdout.strip().splitlines() if s.strip()
     ]
@@ -316,7 +316,7 @@ def main():
 
     # Re-list snapshots for return value
     if not module.check_mode:
-        rc, stdout, stderr = module.run_command(list_cmd, use_unsafe_shell=True)
+        rc, stdout, stderr = module.run_command(list_cmd, use_unsafe_shell=False)
         current_snapshots = [
             s.strip() for s in stdout.strip().splitlines() if s.strip()
         ]

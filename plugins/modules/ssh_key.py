@@ -190,12 +190,7 @@ def main():
             result["msg"] = "Would add SSH key to %s." % auth_keys_path
             module.exit_json(**result)
 
-        # Append the key
-        cmd = "echo %s >> %s" % (
-            module.run_command_environ_update,
-            auth_keys_path,
-        )
-        # Use a safer approach with printf
+        # Append the key using safe list-form command with stdin
         rc, stdout, stderr = module.run_command(
             ["tee", "-a", auth_keys_path],
             data=key + "\n",
