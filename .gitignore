@@ -29,3 +29,4 @@ coverage.xml
 
 # Ansible
 *.retry
+.ansible/

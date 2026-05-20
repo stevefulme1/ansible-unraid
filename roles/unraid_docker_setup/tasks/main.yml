@@ -13,8 +13,8 @@
 
 - name: Build authentication parameters
   ansible.builtin.set_fact:
-    _unraid_auth:
-      host: "{{ unraid_docker_setup_host }}"
+    unraid_docker_setup_auth:
+      api_url: "{{ unraid_docker_setup_host }}"
       api_key: "{{ unraid_docker_setup_api_key }}"
       validate_certs: "{{ unraid_docker_setup_validate_certs }}"
   no_log: true
@@ -23,9 +23,9 @@
   block:
     - name: Pull Docker images
       stevefulme1.unraid.docker_image:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_docker_setup_auth.api_url }}"
+        api_key: "{{ unraid_docker_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_docker_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         state: "{{ item.state | default('present') }}"
       loop: "{{ unraid_docker_setup_images }}"
@@ -33,9 +33,9 @@
 
     - name: Create Docker networks
       stevefulme1.unraid.docker_network:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_docker_setup_auth.api_url }}"
+        api_key: "{{ unraid_docker_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_docker_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         driver: "{{ item.driver | default('bridge') }}"
         subnet: "{{ item.subnet | default(omit) }}"
@@ -47,9 +47,9 @@
 
     - name: Create Docker volumes
       stevefulme1.unraid.docker_volume:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_docker_setup_auth.api_url }}"
+        api_key: "{{ unraid_docker_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_docker_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         driver: "{{ item.driver | default('local') }}"
         state: present
@@ -58,9 +58,9 @@
 
     - name: Deploy Docker containers
       stevefulme1.unraid.docker_container:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_docker_setup_auth.api_url }}"
+        api_key: "{{ unraid_docker_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_docker_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         image: "{{ item.image }}"
         restart_policy: "{{ item.restart_policy | default('unless-stopped') }}"
@@ -78,9 +78,9 @@
 
     - name: Deploy Docker compose stacks
       stevefulme1.unraid.docker_compose:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_docker_setup_auth.api_url }}"
+        api_key: "{{ unraid_docker_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_docker_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         content: "{{ item.content }}"
         state: present
@@ -89,9 +89,9 @@
 
     - name: Configure container autostart
       stevefulme1.unraid.docker_autostart:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_docker_setup_auth.api_url }}"
+        api_key: "{{ unraid_docker_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_docker_setup_auth.validate_certs }}"
         container: "{{ item.container }}"
         enabled: "{{ item.enabled | default(true) }}"
         delay: "{{ item.delay | default(0) }}"

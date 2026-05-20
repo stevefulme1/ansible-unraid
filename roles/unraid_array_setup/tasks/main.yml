@@ -13,8 +13,8 @@
 
 - name: Build authentication parameters
   ansible.builtin.set_fact:
-    _unraid_auth:
-      host: "{{ unraid_array_setup_host }}"
+    unraid_array_setup_auth:
+      api_url: "{{ unraid_array_setup_host }}"
       api_key: "{{ unraid_array_setup_api_key }}"
       validate_certs: "{{ unraid_array_setup_validate_certs }}"
   no_log: true
@@ -23,23 +23,24 @@
   block:
     - name: Gather current disk information
       stevefulme1.unraid.disk_info:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
-      register: _disk_info
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
+      register: unraid_array_setup_disk_info
 
-    - name: Gather current array status
-      stevefulme1.unraid.array_info:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
-      register: _array_info
+    - name: Ensure array is started
+      stevefulme1.unraid.array:
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
+        state: started
+      register: unraid_array_setup_array_status
 
     - name: Assign parity disks
       stevefulme1.unraid.array_disk:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         slot: "{{ item.slot }}"
         device: "{{ item.device }}"
         role: parity
@@ -49,9 +50,9 @@
 
     - name: Assign data disks
       stevefulme1.unraid.array_disk:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         slot: "{{ item.slot }}"
         device: "{{ item.device }}"
         role: data
@@ -61,9 +62,9 @@
 
     - name: Configure cache pools
       stevefulme1.unraid.pool:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         devices: "{{ item.devices }}"
         filesystem: "{{ item.filesystem | default('btrfs') }}"
@@ -74,16 +75,16 @@
 
     - name: Set array state
       stevefulme1.unraid.array:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         state: "{{ unraid_array_setup_state }}"
 
     - name: Configure parity check schedule
       stevefulme1.unraid.parity:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         schedule_enabled: "{{ unraid_array_setup_parity_schedule.enabled }}"
         frequency: "{{ unraid_array_setup_parity_schedule.frequency | default('monthly') }}"
         day_of_month: "{{ unraid_array_setup_parity_schedule.day_of_month | default(1) }}"
@@ -94,18 +95,18 @@
 
     - name: Configure disk spin down
       stevefulme1.unraid.settings:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         spin_down_delay: "{{ unraid_array_setup_spin_down_delay }}"
         default_filesystem: "{{ unraid_array_setup_default_filesystem }}"
         state: present
 
     - name: Configure SMART tests
       stevefulme1.unraid.smart_test:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         type: "{{ item.type }}"
         schedule: "{{ item.schedule }}"
         state: present
@@ -114,9 +115,9 @@
 
     - name: Configure UPS
       stevefulme1.unraid.ups:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_array_setup_auth.api_url }}"
+        api_key: "{{ unraid_array_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_array_setup_auth.validate_certs }}"
         name: "{{ unraid_array_setup_ups.name | default('apc') }}"
         driver: "{{ unraid_array_setup_ups.driver | default('usbhid-ups') }}"
         port: "{{ unraid_array_setup_ups.port | default('auto') }}"

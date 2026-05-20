@@ -5,6 +5,23 @@ All notable changes to **stevefulme1.unraid** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2026-05-20
+
+### Removed
+
+- Delete 38 fabricated stub `_info` modules that used a fake `host` parameter
+  and returned empty data instead of querying the Unraid GraphQL API
+- Retain 70 modules that properly use `UnraidClient` with real GraphQL queries
+
+### Fixed
+
+- Fix roles to use `api_url` parameter matching the GraphQL modules instead of
+  removed stub-style `host` parameter
+- Fix role variable naming to use proper role prefixes per ansible-lint
+- Replace deleted `array_info` reference in `unraid_array_setup` role with
+  `array` module
+- Add missing `MAINTAINERS.md` scaffolding file
+
 ## [2.1.1] - 2026-05-18
 
 ### Security

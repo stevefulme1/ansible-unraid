@@ -13,8 +13,8 @@
 
 - name: Build authentication parameters
   ansible.builtin.set_fact:
-    _unraid_auth:
-      host: "{{ unraid_share_setup_host }}"
+    unraid_share_setup_auth:
+      api_url: "{{ unraid_share_setup_host }}"
       api_key: "{{ unraid_share_setup_api_key }}"
       validate_certs: "{{ unraid_share_setup_validate_certs }}"
   no_log: true
@@ -23,9 +23,9 @@
   block:
     - name: Create user shares
       stevefulme1.unraid.share:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_share_setup_auth.api_url }}"
+        api_key: "{{ unraid_share_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_share_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         comment: "{{ item.comment | default(omit) }}"
         use_cache: "{{ item.use_cache | default('prefer') }}"
@@ -41,9 +41,9 @@
 
     - name: Configure SMB global settings
       stevefulme1.unraid.smb_config:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_share_setup_auth.api_url }}"
+        api_key: "{{ unraid_share_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_share_setup_auth.validate_certs }}"
         enabled: "{{ unraid_share_setup_smb_config.enabled }}"
         workgroup: "{{ unraid_share_setup_smb_config.workgroup | default(omit) }}"
         local_master: "{{ unraid_share_setup_smb_config.local_master | default(omit) }}"
@@ -52,9 +52,9 @@
 
     - name: Configure SMB share exports
       stevefulme1.unraid.share:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_share_setup_auth.api_url }}"
+        api_key: "{{ unraid_share_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_share_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         smb_security: "{{ item.security | default('private') }}"
         smb_export: "{{ item.export | default('yes') }}"
@@ -65,9 +65,9 @@
 
     - name: Configure NFS global settings
       stevefulme1.unraid.nfs_config:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_share_setup_auth.api_url }}"
+        api_key: "{{ unraid_share_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_share_setup_auth.validate_certs }}"
         enabled: "{{ unraid_share_setup_nfs_config.enabled | default(false) }}"
         tuning_enabled: "{{ unraid_share_setup_nfs_config.tuning_enabled | default(false) }}"
         count: "{{ unraid_share_setup_nfs_config.count | default(8) }}"
@@ -76,9 +76,9 @@
 
     - name: Configure NFS share exports
       stevefulme1.unraid.share:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_share_setup_auth.api_url }}"
+        api_key: "{{ unraid_share_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_share_setup_auth.validate_certs }}"
         name: "{{ item.name }}"
         nfs_security: "{{ item.security | default('public') }}"
         nfs_export: "{{ item.export | default('yes') }}"
@@ -89,9 +89,9 @@
 
     - name: Configure cache mover
       stevefulme1.unraid.cache_mover:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_share_setup_auth.api_url }}"
+        api_key: "{{ unraid_share_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_share_setup_auth.validate_certs }}"
         schedule_enabled: "{{ unraid_share_setup_cache_mover.schedule_enabled }}"
         schedule: "{{ unraid_share_setup_cache_mover.schedule | default('40 3 * * *') }}"
         action: "{{ unraid_share_setup_cache_mover.action | default('auto') }}"
@@ -99,9 +99,9 @@
 
     - name: Configure notification agents
       stevefulme1.unraid.notification_agent:
-        host: "{{ _unraid_auth.host }}"
-        api_key: "{{ _unraid_auth.api_key }}"
-        validate_certs: "{{ _unraid_auth.validate_certs }}"
+        api_url: "{{ unraid_share_setup_auth.api_url }}"
+        api_key: "{{ unraid_share_setup_auth.api_key }}"
+        validate_certs: "{{ unraid_share_setup_auth.validate_certs }}"
         agent: "{{ item.agent }}"
         name: "{{ item.name }}"
         events: "{{ item.events | default([]) }}"
