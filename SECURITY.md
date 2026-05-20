@@ -1,10 +1,15 @@
 # Security Policy
 
+## Supported Versions
+
+Ansible applies security fixes according to the 3-versions-back support
+policy. Please find more information in [our docs](
+https://docs.ansible.com/ansible/devel/reference_appendices/release_and_maintenance.html#release-status
+).
+
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in this collection, please report it
-responsibly by opening a private security advisory on GitHub:
-
-https://github.com/stevefulme1/ansible-unraid/security/advisories/new
-
-Do **not** open a public issue for security vulnerabilities.
+We encourage responsible disclosure practices for security
+vulnerabilities. Please read our [policies for reporting bugs](
+https://docs.ansible.com/ansible/devel/community/reporting_bugs_and_features.html#reporting-a-bug
+) if you want to report a security issue that might affect Ansible.
