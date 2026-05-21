@@ -1,0 +1,88 @@
+---
+# Integration tests for stevefulme1.unraid.wireguard
+
+- name: Create wireguard (check_mode)
+  stevefulme1.unraid.wireguard:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+  check_mode: true
+  register: check_result
+
+- name: Verify check_mode reports changed
+  ansible.builtin.assert:
+    that:
+      - check_result is changed
+
+- name: Create wireguard
+  stevefulme1.unraid.wireguard:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+  register: create_result
+
+- name: Verify wireguard was created
+  ansible.builtin.assert:
+    that:
+      - create_result is changed
+
+- name: Create wireguard again (idempotency)
+  stevefulme1.unraid.wireguard:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+  register: idem_result
+
+- name: Verify idempotent create
+  ansible.builtin.assert:
+    that:
+      - idem_result is not changed
+
+- name: Delete wireguard (check_mode)
+  stevefulme1.unraid.wireguard:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+  check_mode: true
+  register: delete_check
+
+- name: Verify check_mode delete reports changed
+  ansible.builtin.assert:
+    that:
+      - delete_check is changed
+
+- name: Delete wireguard
+  stevefulme1.unraid.wireguard:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+  register: delete_result
+
+- name: Verify wireguard was deleted
+  ansible.builtin.assert:
+    that:
+      - delete_result is changed
+
+- name: Delete wireguard again (idempotent)
+  stevefulme1.unraid.wireguard:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+  register: delete_idem
+
+- name: Verify idempotent delete
+  ansible.builtin.assert:
+    that:
+      - delete_idem is not changed

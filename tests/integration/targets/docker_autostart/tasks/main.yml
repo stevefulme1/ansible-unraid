@@ -1,0 +1,19 @@
+---
+# Integration tests for stevefulme1.unraid.docker_autostart
+
+- name: Run docker_autostart (check_mode)
+  stevefulme1.unraid.docker_autostart:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    container_spec: "ansible-test-container_spec"
+    containers: []
+    order: 1
+  check_mode: true
+  register: check_result
+
+- name: Verify check_mode result
+  ansible.builtin.assert:
+    that:
+      - check_result is not failed

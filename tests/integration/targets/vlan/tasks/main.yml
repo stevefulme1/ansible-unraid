@@ -1,0 +1,100 @@
+---
+# Integration tests for stevefulme1.unraid.vlan
+
+- name: Create vlan (check_mode)
+  stevefulme1.unraid.vlan:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+    id: 1
+    parent: "ansible-test-parent"
+  check_mode: true
+  register: check_result
+
+- name: Verify check_mode reports changed
+  ansible.builtin.assert:
+    that:
+      - check_result is changed
+
+- name: Create vlan
+  stevefulme1.unraid.vlan:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+    id: 1
+    parent: "ansible-test-parent"
+  register: create_result
+
+- name: Verify vlan was created
+  ansible.builtin.assert:
+    that:
+      - create_result is changed
+
+- name: Create vlan again (idempotency)
+  stevefulme1.unraid.vlan:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+    id: 1
+    parent: "ansible-test-parent"
+  register: idem_result
+
+- name: Verify idempotent create
+  ansible.builtin.assert:
+    that:
+      - idem_result is not changed
+
+- name: Delete vlan (check_mode)
+  stevefulme1.unraid.vlan:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+    id: 1
+    parent: "ansible-test-parent"
+  check_mode: true
+  register: delete_check
+
+- name: Verify check_mode delete reports changed
+  ansible.builtin.assert:
+    that:
+      - delete_check is changed
+
+- name: Delete vlan
+  stevefulme1.unraid.vlan:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+    id: 1
+    parent: "ansible-test-parent"
+  register: delete_result
+
+- name: Verify vlan was deleted
+  ansible.builtin.assert:
+    that:
+      - delete_result is changed
+
+- name: Delete vlan again (idempotent)
+  stevefulme1.unraid.vlan:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+    id: 1
+    parent: "ansible-test-parent"
+  register: delete_idem
+
+- name: Verify idempotent delete
+  ansible.builtin.assert:
+    that:
+      - delete_idem is not changed

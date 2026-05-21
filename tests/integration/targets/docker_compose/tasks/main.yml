@@ -1,0 +1,16 @@
+---
+# Integration tests for stevefulme1.unraid.docker_compose
+
+- name: Run docker_compose (check_mode)
+  stevefulme1.unraid.docker_compose:
+    project: "ansible-test-project"
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  check_mode: true
+  register: check_result
+
+- name: Verify check_mode result
+  ansible.builtin.assert:
+    that:
+      - check_result is not failed

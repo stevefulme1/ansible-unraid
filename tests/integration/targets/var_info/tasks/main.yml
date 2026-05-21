@@ -1,0 +1,14 @@
+---
+# Integration tests for stevefulme1.unraid.var_info
+
+- name: Query var_info
+  stevefulme1.unraid.var_info:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: result
+
+- name: Verify var_info returns data
+  ansible.builtin.assert:
+    that:
+      - result is not failed

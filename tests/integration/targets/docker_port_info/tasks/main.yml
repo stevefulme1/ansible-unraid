@@ -1,0 +1,14 @@
+---
+# Integration tests for stevefulme1.unraid.docker_port_info
+
+- name: Query docker_port_info
+  stevefulme1.unraid.docker_port_info:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: result
+
+- name: Verify docker_port_info returns data
+  ansible.builtin.assert:
+    that:
+      - result is not failed

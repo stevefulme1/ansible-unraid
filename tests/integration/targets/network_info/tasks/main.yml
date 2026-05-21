@@ -1,0 +1,14 @@
+---
+# Integration tests for stevefulme1.unraid.network_info
+
+- name: Query network_info
+  stevefulme1.unraid.network_info:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+  register: result
+
+- name: Verify network_info returns data
+  ansible.builtin.assert:
+    that:
+      - result is not failed

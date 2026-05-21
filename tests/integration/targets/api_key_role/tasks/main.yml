@@ -1,0 +1,100 @@
+---
+# Integration tests for stevefulme1.unraid.api_key_role
+
+- name: Create api_key_role (check_mode)
+  stevefulme1.unraid.api_key_role:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+    key_id: "ansible-test-key_id"
+    role: ADMIN
+  check_mode: true
+  register: check_result
+
+- name: Verify check_mode reports changed
+  ansible.builtin.assert:
+    that:
+      - check_result is changed
+
+- name: Create api_key_role
+  stevefulme1.unraid.api_key_role:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+    key_id: "ansible-test-key_id"
+    role: ADMIN
+  register: create_result
+
+- name: Verify api_key_role was created
+  ansible.builtin.assert:
+    that:
+      - create_result is changed
+
+- name: Create api_key_role again (idempotency)
+  stevefulme1.unraid.api_key_role:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: present
+    key_id: "ansible-test-key_id"
+    role: ADMIN
+  register: idem_result
+
+- name: Verify idempotent create
+  ansible.builtin.assert:
+    that:
+      - idem_result is not changed
+
+- name: Delete api_key_role (check_mode)
+  stevefulme1.unraid.api_key_role:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+    key_id: "ansible-test-key_id"
+    role: ADMIN
+  check_mode: true
+  register: delete_check
+
+- name: Verify check_mode delete reports changed
+  ansible.builtin.assert:
+    that:
+      - delete_check is changed
+
+- name: Delete api_key_role
+  stevefulme1.unraid.api_key_role:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+    key_id: "ansible-test-key_id"
+    role: ADMIN
+  register: delete_result
+
+- name: Verify api_key_role was deleted
+  ansible.builtin.assert:
+    that:
+      - delete_result is changed
+
+- name: Delete api_key_role again (idempotent)
+  stevefulme1.unraid.api_key_role:
+    api_url: "{{ unraid_api_url }}"
+    api_key: "{{ unraid_api_key }}"
+    validate_certs: "{{ unraid_validate_certs | default(true) }}"
+    name: "ansible-test-{{ resource_prefix }}"
+    state: absent
+    key_id: "ansible-test-key_id"
+    role: ADMIN
+  register: delete_idem
+
+- name: Verify idempotent delete
+  ansible.builtin.assert:
+    that:
+      - delete_idem is not changed
